@@ -112,3 +112,11 @@ hr.new4 {
   margin-top: auto;
   padding-top: 20px;
 }
+
+.home-page{
+  background-color: black;
+}
+
+.news-page{
+  background-color: whitesmoke;
+}
