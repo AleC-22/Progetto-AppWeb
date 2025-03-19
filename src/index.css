@@ -95,6 +95,11 @@ hr.new4 {
   color: white;
 }
 
+.sidebar a:hover:not(.active) {
+  background-color: #555;
+  color: white;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;

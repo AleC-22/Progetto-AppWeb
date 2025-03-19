@@ -1,7 +1,7 @@
 import {useState} from "react";
 import {getAuth, createUserWithEmailAndPassword} from "firebase/auth";
 
-export function RegisterForm(){
+export function RegisterForm({setIsLogin}){
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -9,6 +9,11 @@ export function RegisterForm(){
     const auth = getAuth();
 
     const registerHandler = async (e) => {
+        if(!email || !password){
+            e.preventDefault();
+            alert("Please enter a valid email and password");
+            return;
+        }
         if (password.length < 6) {
             e.preventDefault();
             alert("Password should be at least 6 characters long.");
@@ -20,7 +25,10 @@ export function RegisterForm(){
             return;
         }
         try{
-            await createUserWithEmailAndPassword(auth, email, password);
+            await createUserWithEmailAndPassword(auth, email, password)
+                .then(()=>{
+                    setIsLogin(true);
+                });
         } catch (error){
             console.log(error);
             setError(error.message);
