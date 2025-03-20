@@ -18,12 +18,12 @@ export function HomePage({setUser}){
                     console.log(error)
                 });
     };
-
     return(
         <>
+            {/*{page === "Home" ? <HomePage/> : page && auth !== undefined ? <Home/> : page === "Ciao" ? <News /> : null}*/}
             <div className={"background-home"}>
                 <div className="sidebar">
-                    <a className={page === "Home" ? "active" : ""} href="#" onClick={()=>setPage("Home")}>
+                    <a className={page === "Home" ? "active" : ""} href="#" onClick={() => setPage("Home")}>
                         Home
                     </a>
                     <a className={page === "News" ? "active" : ""} href="#" onClick={()=>setPage("News")}>
@@ -38,12 +38,11 @@ export function HomePage({setUser}){
                         </a>
                     </div>
                 </div>
-            </div>
-
-            <div className={""}>
-                {page === "Home" && <Home/>}
-                {page === "News" && <News/>}
-                {page === "Profile" && <Profile/>}
+                <div>
+                    {page === "Home" && <Home/>}
+                    {page === "News" && <News/>}
+                    {page === "Profile" && <Profile/>}
+                </div>
             </div>
         </>
     )

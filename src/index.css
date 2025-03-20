@@ -104,13 +104,13 @@ hr.new4 {
   display: flex;
   flex-direction: column;
   align-items: start;
-  margin: auto;
   padding: 1em;
   width: 200px;
   position: fixed;
   background-color: #04AA6D;
-  height: 100%;
+  height: 100vh;
   overflow: auto;
+  left: 0;
 }
 
 .logout-box{
@@ -118,10 +118,30 @@ hr.new4 {
   padding-top: 20px;
 }
 
-.home-page{
-  background-color: black;
+.home-page {
+  display: flex;
+  gap: 15px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
 }
 
 .news-page{
   background-color: whitesmoke;
+}
+
+.btn-home{
+  padding: 15px;
+  width: 300px;
+}
+
+.btn-year{
+  padding: 10px;
+  width: 300px;
+}
+
+.header{
+  color: whitesmoke;
 }
