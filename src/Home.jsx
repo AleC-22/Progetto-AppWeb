@@ -1,55 +1,41 @@
-
 import {Year} from "./Year.jsx";
+import {useState} from "react";
 
 export function Home() {
-    const [choose, setChoose] = useState("");
+    const [choose, setChoose] = useState(false);
+    const [genre, setGenre] = useState("");
+
+    function handleGenresChange(genre) {
+        setGenre(genre);
+        setChoose(true);
+    }
+
+    function buttonListCreator(){
+        let buttonList = [];
+        buttonList.push({genres: "Action, Adventure, Drama", macroCategory: "Dramatic"});
+        buttonList.push({genres: "Horror, Thriller, Mystery", macroCategory: "Anxiety"});
+        buttonList.push({genres: "Comedy, Family, Romance", macroCategory: "Gentle"});
+        buttonList.push({genres: "History, Documentary", macroCategory: "Curious"});
+        buttonList.push({genres: "Fantasy, Sci-Fi", macroCategory: "Out of this world"});
+        return buttonList;
+    }
 
     return (
         <>
         <div className={"home-page background-image"}>
-        {choose === "year" ? <Year setChoose={setChoose} choose={choose}/> :
+        {choose ? <Year setChoose={setChoose} genre={genre} /> :
             <>
                 <h1 className={"header"}>How do you feel?</h1>
 
-                <button type={"button"} className={"btn btn-danger btn-home"}
-                        onClick={()=>{
-                            setChoose("year");
-                        }}>
-                    Dramatic<br/>
-                    (Action, Adventure, Drama)
-                </button>
-
-                <button type={"button"} className={"btn btn-danger btn-home"}
-                        onClick={()=>{
-                            setChoose("year");
-                        }}>
-                    Anxiety<br/>
-                    (Horror, Thriller, Mystery)
-                </button>
-
-                <button type={"button"} className={"btn btn-danger btn-home"}
-                        onClick={()=>{
-                            setChoose("year");
-                        }}>
-                    Gentle<br/>
-                    (Comedy, Family, Romance)
-                </button>
-
-                <button type={"button"} className={"btn btn-danger btn-home"}
-                        onClick={()=>{
-                            setChoose("year");
-                        }}>
-                    Curious<br/>
-                    (History, Documentary)
-                </button>
-
-                <button type={"button"} className={"btn btn-danger btn-home"}
-                        onClick={()=>{
-                            setChoose("year");
-                        }}>
-                    Out of this world<br/>
-                    (Fantasy, Sci-Fi)
-                </button>
+                {buttonListCreator().map((button, index) => (
+                    <div key={index}>
+                        <button className={"btn btn-danger btn-home"}
+                            onClick={() => handleGenresChange(button.genres)}>
+                            {button.macroCategory} <br/>
+                            ({button.genres})
+                        </button>
+                    </div>
+                ))}
             </>
             }
         </div>

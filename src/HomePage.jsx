@@ -20,24 +20,32 @@ export function HomePage({setUser}){
     };
     return(
         <>
-            {/*{page === "Home" ? <HomePage/> : page && auth !== undefined ? <Home/> : page === "Ciao" ? <News /> : null}*/}
             <div className={"background-home"}>
-                <div className="sidebar">
-                    <a className={page === "Home" ? "active" : ""} href="#" onClick={() => setPage("Home")}>
-                        Home
-                    </a>
-                    <a className={page === "News" ? "active" : ""} href="#" onClick={()=>setPage("News")}>
-                        News
-                    </a>
-                    <a className={page === "Profile" ? "active" : ""} href="#" onClick={()=>setPage("Profile")}>
-                        Profile
-                    </a>
-                    <div className={"logout-box"}>
+                <ul>
+                    <li>
+                        <a className={page === "Home" ? "active" : ""} href="#"
+                           onClick={() => setPage("Home")}>
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <a className={page === "News" ? "active" : ""} href="#"
+                           onClick={() => setPage("News")}>
+                            News
+                        </a>
+                    </li>
+                    <li>
+                        <a className={page === "Profile" ? "active" : ""} href="#"
+                           onClick={() => setPage("Profile")}>
+                            Profile
+                        </a>
+                    </li>
+                    <li>
                         <a href={"#"} onClick={(signOutHandler)}>
                             Logout
                         </a>
-                    </div>
-                </div>
+                    </li>
+                </ul>
                 <div>
                     {page === "Home" && <Home/>}
                     {page === "News" && <News/>}

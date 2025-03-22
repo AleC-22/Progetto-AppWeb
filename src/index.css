@@ -36,7 +36,7 @@
 }
 
 .background-image{
-  background: url("../public/Background.jpg");
+  background: url("../public/Interstellar.jpg");
   box-shadow: inset 0 0 0 100vmax rgba(0,0,0,0.55);
   height: 100vh;
   background-size: cover;
@@ -79,43 +79,9 @@ hr.new4 {
 .background-home {
   background-color: whitesmoke;
   height: 100vh;
+  overflow: hidden;
   background-size: cover;
   width: 100%;
-}
-
-.sidebar a {
-  display: block;
-  color: black;
-  padding: 16px;
-  text-decoration: none;
-}
-
-.sidebar a.active {
-  background-color: transparent;
-  color: white;
-}
-
-.sidebar a:hover:not(.active) {
-  background-color: #555;
-  color: white;
-}
-
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  align-items: start;
-  padding: 1em;
-  width: 200px;
-  position: fixed;
-  background-color: #04AA6D;
-  height: 100vh;
-  overflow: auto;
-  left: 0;
-}
-
-.logout-box{
-  margin-top: auto;
-  padding-top: 20px;
 }
 
 .home-page {
@@ -133,7 +99,7 @@ hr.new4 {
 }
 
 .btn-home{
-  padding: 15px;
+  padding: 7px;
   width: 300px;
 }
 
@@ -144,4 +110,32 @@ hr.new4 {
 
 .header{
   color: whitesmoke;
+}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #333;
+}
+
+li {
+  float: left;
+}
+
+li a {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+li a:hover {
+  background-color: #111;
+}
+
+li:last-child {
+  float: right;
 }
