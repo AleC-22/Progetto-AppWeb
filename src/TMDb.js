@@ -44,6 +44,6 @@ export const getMovies = async (genre, year, page = 1) => {
     }
 }
 
-function getGenreID(genreString){
+export function getGenreID(genreString){
     return genreString.split(",").map(g => genreMap[g.trim().toLowerCase()]).filter(id => id);
 }
