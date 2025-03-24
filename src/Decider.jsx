@@ -18,32 +18,53 @@ export function Decider({year, genre}) {
     }, [year, genre]);
 
     function handleNextMovie(){
-        setCurrentIndex((prevIndex) => prevIndex === movies.length-1 ? 0 : prevIndex + 1);
+        setCurrentIndex((prevIndex) =>
+            prevIndex === movies.length-1 ? 0 : prevIndex + 1);
     }
 
     const movie = movies[currentIndex];
 
+    function handleMovieRating(){
+        let movieRating = 0.0;
+        if(movie.vote_average != null) {
+            movieRating = Math.round(movie.vote_average * 10) / 10
+        }
+        return movieRating;
+    }
+
+
+
     return (
         <>
         {movie ? (<div className="movie-card">
-                <div className="movie-info">
-                    <h3 className={"text-black"}>
-                        {movie.title}<br/>
-                        {movie.id}<br/>
-                    </h3>
-                    {/*<p className={"movie-genre"}>*/}
+                <img
+                    src= {`https://image.tmdb.org/t/p/w300${movie.poster_path}`}
+                    alt={movie.title}
+                    className={"movie-poster"}
+                    />
 
-                    {/*</p>*/}
+                <div className="movie-info">
+
+                    <h3 className={"text-black"}>
+                        {movie.title}
+                    </h3>
+
+                    <p className={"movie-description"}>
+                        {movie.overview}
+                    </p>
+
+                    <div className={"ratings"}>
+                        <span className={"imbd"}>
+
+                            Rating: {handleMovieRating()}
+                        </span>
+                    </div>
+
                 </div>
-        </div>
+            </div>
         ) : (<p> Caricamento...</p>)}
-                {/*<div className="movie-info">*/}
-                {/*    <h3>{movie.title}</h3>*/}
-                {/*    /!*<p className="movie-genre">*!/*/}
-                {/*    /!*    {}*!/*/}
-                {/*    /!*</p>*!/*/}
-                {/*</div>*/}
-            <button onClick={handleNextMovie}>Prossimo Film</button>
+                    <button onClick={handleNextMovie}>Prossimo Film</button>
+
         </>
     );
 }

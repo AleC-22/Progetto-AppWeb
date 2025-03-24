@@ -143,19 +143,56 @@ li:last-child {
 .movie-card{
   background-color: whitesmoke;
   border-radius: 10px;
-  padding: 20px;
-  width: 300px;
+  padding: 40px;
+  width: 500px;
+  max-width: 50%;
+  height: auto;
+  max-height: 70%;
   text-align: center;
-  color: white;
+  color: black;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 .movie-info {
-  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 10px;
 }
-.movie-genre {
-  font-style: italic;
-  color: #ccc;
+
+.movie-poster {
+  width: 40%;
+  height: auto;
+  margin-right: 20px;
+  border-radius: 10px;
 }
+
+.ratings {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-top: 10px;
+  font-weight: bold;
+  color: black;
+}
+
+.imdb {
+  background: #f5c518;
+  color: black;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.movie-description {
+  font-size: 14px;
+  max-height: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 7;
+  -webkit-box-orient: vertical;
+}
+
