@@ -22,23 +22,23 @@ export function Home() {
 
     return (
         <>
-        <div className={"home-page background-image"}>
-        {choose ? <Year setChoose={setChoose} genre={genre} /> :
-            <>
-                <h1 className={"header"}>How do you feel?</h1>
 
-                {buttonListCreator().map((button, index) => (
-                    <div key={index}>
-                        <button className={"btn btn-danger btn-home"}
-                            onClick={() => handleGenresChange(button.genres)}>
-                            {button.macroCategory} <br/>
-                            ({button.genres})
-                        </button>
-                    </div>
-                ))}
-            </>
-            }
-        </div>
+            <div className={"home-page background-image"}>
+                {choose ? <Year setChoose={setChoose} genre={genre} /> :
+                    <>
+                        <h1 className={"header"}>How do you feel?</h1>
+                        {buttonListCreator().map((button, index) => (
+                            <div key={index}>
+                                <button className={"btn btn-danger btn-home"}
+                                        onClick={() => handleGenresChange(button.genres)}>
+                                    {button.macroCategory} <br/>
+                                    ({button.genres})
+                                </button>
+                            </div>
+                        ))}
+                    </>
+                }
+            </div>
         </>
     );
 }

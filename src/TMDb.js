@@ -28,6 +28,7 @@ export const getMovies = async (genre, year, page = 1) => {
                 with_genres: getGenreID(genre).join(","),
                 "primary_release_date.gte": `${year}-01-01`,
                 sort_by: "popularity.desc",
+                region: "IT",
                 language: "it-IT",
                 page: page
             }
@@ -44,6 +45,28 @@ export const getMovies = async (genre, year, page = 1) => {
     }
 }
 
-export function getGenreID(genreString){
+function getGenreID(genreString){
     return genreString.split(",").map(g => genreMap[g.trim().toLowerCase()]).filter(id => id);
 }
+
+export const getUpcomingMovies = async (page = 1) => {
+    try {
+        const response = await axios.get(`${BASE_URL}/movie/upcoming`, {
+            params: {
+                api_key: API_KEY,
+                language: "it-IT",
+                page: page,
+                region: "IT"
+            }
+        });
+
+        return {
+            results: response.data.results,
+            actualPage: response.data.page,
+            totalPages: response.data.total_pages
+        };
+    } catch (error) {
+        console.log("Errore nel recupero dei film in uscita: ", error);
+        return [];
+    }
+};

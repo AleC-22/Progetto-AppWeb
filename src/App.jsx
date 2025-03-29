@@ -2,7 +2,7 @@ import {useState} from "react";
 import {LoginForm} from "./LoginForm.jsx";
 import {RegisterForm} from "./RegisterForm.jsx";
 import {AuthGoogle} from "./AuthGoogle.js";
-import {HomePage} from "./HomePage.jsx";
+import {MenuHandler} from "./MenuHandler.jsx";
 
 function App() {
     const [isLogin, setIsLogin] = useState(true);
@@ -10,7 +10,7 @@ function App() {
 
     return (
         <>
-            {user !== null ? <HomePage setUser={setUser}/> : <div className={"background-image"}>
+            {user !== null ? <MenuHandler setUser={setUser}/> : <div className={"background-image"}>
                 <form className="form-box">
                     <h1 className={"d-flex justify-content-center"}> {isLogin ? "Welcome" : "Create an account"}</h1>
                     {isLogin ? <LoginForm setUser={setUser}/> : <RegisterForm setIsLogin={setIsLogin}/>}

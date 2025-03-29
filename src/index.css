@@ -17,6 +17,7 @@
   height: 100vh;
 }
 
+/*APP*/
 .form-box {
   padding: 3em;
   width: 450px;
@@ -70,16 +71,18 @@ hr.new4 {
   background-position: 12px 11px;
 }
 
+/*REGISTER AND LOGIN BUTTOM*/
 .btn-custom{
   background-color: #26a599;
   border: none;
   color: white;
 }
 
+/*MENU HANDLER*/
 .background-home {
   background-color: whitesmoke;
   height: 100vh;
-  overflow: hidden;
+  overflow: auto;
   background-size: cover;
   width: 100%;
 }
@@ -92,10 +95,6 @@ hr.new4 {
   align-items: center;
   height: 100vh;
   text-align: center;
-}
-
-.news-page{
-  background-color: whitesmoke;
 }
 
 .btn-home{
@@ -112,6 +111,7 @@ hr.new4 {
   color: whitesmoke;
 }
 
+/* HOME-NEWS-PROFILE*/
 ul {
   list-style-type: none;
   margin: 0;
@@ -140,6 +140,7 @@ li:last-child {
   float: right;
 }
 
+/*DECIDER*/
 .movie-card{
   background-color: whitesmoke;
   border-radius: 10px;
@@ -170,6 +171,7 @@ li:last-child {
   border-radius: 10px;
 }
 
+
 .ratings {
   display: flex;
   flex-direction: column;
@@ -195,4 +197,58 @@ li:last-child {
   -webkit-line-clamp: 7;
   -webkit-box-orient: vertical;
 }
+
+.button {
+  background-color: whitesmoke;
+  border: none;
+  padding: 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+}
+
+.button5 {border-radius: 50%;}
+
+.button-container{
+  display: flex;
+  gap: 15px;
+}
+
+/*NEWS*/
+.news-container {
+  background: whitesmoke;
+  text-align: center;
+  height: 100vh;
+  padding: 20px;
+  color: black;
+}
+
+.movies-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.movie-card-news {
+  background: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  width: 250px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.movie-poster-news {
+  width: 100%;
+  border-radius: 10px;
+}
+
+h3-news {
+  margin: 10px 0;
+  font-size: 18px;
+}
+
+
 

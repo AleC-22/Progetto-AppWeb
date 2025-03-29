@@ -5,7 +5,7 @@ import {News} from "./News.jsx";
 import {Profile} from "./Profile.jsx";
 
 
-export function HomePage({setUser}){
+export function MenuHandler({setUser}){
     const auth = getAuth();
     const [page, setPage] = useState("Home");
 
