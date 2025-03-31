@@ -6,6 +6,7 @@ export function RegisterForm({setIsLogin}){
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
+
     const auth = getAuth();
 
     const registerHandler = async (e) => {
@@ -39,25 +40,28 @@ export function RegisterForm({setIsLogin}){
         <>
             <div>
                 <div className="my-3">
-                    <label htmlFor="exampleInputEmail1" className="form-label"></label>
+                    <label className="form-label"></label>
                     <input type="email" className="form-control" id="exampleInputEmail1"
                            aria-describedby="emailHelp"
                            placeholder={"Email"}
                            onChange={(e) => setEmail(e.target.value)}/>
                 </div>
+
                 <div className="mb-3">
-                    <label htmlFor="exampleInputPassword1" className="form-label"></label>
+                    <label className="form-label"></label>
                     <input type="password" className="form-control" id="exampleInputPassword1"
                            placeholder={"Password"}
                            onChange={(e) => setPassword(e.target.value)}/>
                 </div>
+
                 <div className="mb-3">
-                    <label htmlFor="exampleInputPassword2" className="form-label"></label>
+                    <label className="form-label"></label>
                     <input type="password" className="form-control" id="exampleInputPassword2"
                            placeholder={"Confirm your password"}
                            onChange={(e) => setConfirmPassword(e.target.value)} />
                 </div>
-                <div className={"button-box"}>
+
+                <div className={"button-box mt-3"}>
                     <button type="submit" className="btn btn-primary btn-custom px-4" onClick={registerHandler}>
                         Create account
                     </button>

@@ -237,7 +237,7 @@ li:last-child {
   padding: 10px;
   border-radius: 10px;
   width: 250px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .movie-poster-news {
@@ -245,10 +245,55 @@ li:last-child {
   border-radius: 10px;
 }
 
-h3-news {
+.h3-news {
   margin: 10px 0;
   font-size: 18px;
 }
 
+/*PROFILE*/
 
+.profile-container {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  color: black;
+}
+
+.profile-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.profile-form-group{
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.delete-button {
+  width: 38%;
+  padding: 10px;
+  font-weight: bold;
+  border-radius: 5px;
+}
+
+.delete-button:hover {
+  background: #c82333;
+}
+
+/*FAVORITEGENRE*/
+.select-container{
+  width: 30%;
+}
+
+.btn-genre {
+  margin-top: 10px;
+  padding: 10px 20px;
+  font-size: 18px;
+}
 
