@@ -38,7 +38,7 @@ export function News() {
                                 alt={movie.title}
                                 className={"movie-poster-news"}
                                 />
-                            <h3-news>{movie.title}</h3-news>
+                            <h3 className={"h3-news"}>{movie.title}</h3>
                             <p>📅 Release: {movie.release_date}</p>
                         </div>
                     ))}
