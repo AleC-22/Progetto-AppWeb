@@ -1,13 +1,20 @@
-import {useState} from "react";
 import {getAuth, deleteUser, signOut} from "firebase/auth";
+import {saveFavoriteGenre} from "./SetterAndGetter.js";
 
-export function Profile({setUser}){
-    const [favoriteGenre, setFavoriteGenre] = useState("");
+export function Profile({setUser, setFavoriteGenre, favoriteGenre}){
 
     const auth = getAuth();
+    const user = auth.currentUser;
 
     const genres = ["Action", "Adventure", "Drama", "Horror", "Thriller", "Mistery", "Comedy", "Family",
         "Romance", "History", "Documentary", "Fantasy", "Sci-Fi"];
+
+    const selectionHandler = (genre) => {
+        saveFavoriteGenre(user.uid, genre).then(() => {
+            setFavoriteGenre(genre);
+        });
+    };
+
 
     const signOutHandler = async () => {
         await signOut(auth)
@@ -27,7 +34,6 @@ export function Profile({setUser}){
             console.error("User not found!");
             return;
         }
-
         const confirmDelete = window.confirm("Are you sure you want to delete this account?");
         if(confirmDelete){
             try {
@@ -45,14 +51,14 @@ export function Profile({setUser}){
 
     return (
         <div className={"profile-container"}>
-            <h2 className={"profile-title"}>Impostazioni profilo</h2>
+            <h2 className={"profile-title"}>Profile setting</h2>
             <div className={"profile-form-group"}>
                 <label className={"form-label"}> Select your favorite genre</label>
                 <select
                     value={favoriteGenre}
                     onChange={(e) =>
                     {
-                        setFavoriteGenre(e.target.value);
+                        selectionHandler(e.target.value);
                         console.log(favoriteGenre);
                     }}
                     className="form-select">

@@ -10,18 +10,16 @@ export function RegisterForm({setIsLogin}){
     const auth = getAuth();
 
     const registerHandler = async (e) => {
+        e.preventDefault();
         if(!email || !password){
-            e.preventDefault();
             alert("Please enter a valid email and password");
             return;
         }
         if (password.length < 6) {
-            e.preventDefault();
             alert("Password should be at least 6 characters long.");
             return;
         }
         if (password !== confirmPassword){
-            e.preventDefault();
             alert("Passwords do not match");
             return;
         }

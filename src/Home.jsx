@@ -1,7 +1,7 @@
 import {Year} from "./Year.jsx";
 import {useState} from "react";
 
-export function Home() {
+export function Home({partyName}) {
     const [choose, setChoose] = useState(false);
     const [genre, setGenre] = useState("");
 
@@ -24,7 +24,7 @@ export function Home() {
         <>
 
             <div className={"home-page background-image"}>
-                {choose ? <Year setChoose={setChoose} genre={genre} /> :
+                {choose ? <Year setChoose={setChoose} genre={genre} partyName={partyName} /> :
                     <>
                         <h1 className={"header"}>How do you feel?</h1>
                         {buttonListCreator().map((button, index) => (

@@ -8,8 +8,8 @@ export function LoginForm({setUser}) {
     const [error, setError] = useState("");
 
     const loginHandler = async (e) => {
+        e.preventDefault();
         if (password.length < 6) {
-            e.preventDefault();
             alert("Password should be at least 6 characters long.");
             return;
         }
@@ -41,7 +41,7 @@ export function LoginForm({setUser}) {
                     onChange={(e) => setPassword(e.target.value)}/>
                 </div>
                 <div className={"button-box"}>
-                    <button type="submit" className="btn btn-primary btn-custom px-4" onClick={loginHandler}>Login</button>
+                    <button className="btn btn-primary btn-custom px-4" onClick={(e) => loginHandler(e)}>Login</button>
                 </div>
             </div>
         </>

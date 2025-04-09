@@ -34,10 +34,24 @@ export const getMovies = async (genre, year, page = 1) => {
             }
         });
         let responseObj = {}
-        responseObj.results = response.data.results;
+        function filmTransformer(){
+            let films = [];
+            for(let responseFilm of response.data.results){
+                let transorfedFilm = {
+                    title: responseFilm.title,
+                    description: responseFilm.overview,
+                    image: "https://image.tmdb.org/t/p/w300"+responseFilm.poster_path,
+                    rating: responseFilm.vote_average
+                }
+                films.push(transorfedFilm);
+            }
+            return films;
+        }
+
+        responseObj.results = filmTransformer();
         responseObj.actualPage = response.data.page;
         responseObj.totalPages = response.data.total_pages;
-        console.log(response.data)
+        console.log(responseObj)
         return responseObj;
     } catch (error) {
         console.log("Errore nel recupero film: ", error);

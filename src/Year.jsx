@@ -1,7 +1,7 @@
 import {useState} from "react";
-import {Decider} from "./Decider.jsx";
+import {ConfirmParty} from "./ConfirmParty.jsx";
 
-export function Year({setChoose, genre}) {
+export function Year({setChoose, genre, partyName}) {
     const [year, setYear] = useState(null);
     const [decider, setDecider] = useState(false);
 
@@ -25,9 +25,10 @@ export function Year({setChoose, genre}) {
 
     return (
         <>
-            {decider ? <Decider year = {year} genre = {genre}/>:
+            {decider ? /*<Decider year = {year} genre = {genre} partyName = {partyName} />*/
+                <ConfirmParty year = {year} genre = {genre} partyName = {partyName} setChoose = {setChoose}/>:
                 <>
-                    <div className={"home-page"}>
+                    <div className={"home-page background-image"}>
                         <h1>Which year of release?</h1>
                         {buttonListCreator().map((button, index) => (
                             <div key={index}>

@@ -4,9 +4,14 @@ import {doc, setDoc, getDoc} from "firebase/firestore";
 
 
 export const getFavoriteGenre = async (userId) => {
+    if(!userId){
+        return null;
+    }
+
     try{
         const userDoc = await getDoc(doc(db, "users", userId));
         if (userDoc.exists()) {
+            console.log("Dati recuperati:", userDoc.data());
             return userDoc.data().favoriteGenre;
         }
         return null;

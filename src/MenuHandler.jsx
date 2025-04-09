@@ -5,25 +5,30 @@ import {News} from "./News.jsx";
 import {Profile} from "./Profile.jsx";
 import {FavoriteGenre} from "./FavoriteGenre.jsx";
 import {getFavoriteGenre} from "./SetterAndGetter.js";
+import {Fallback} from "./Fallback.jsx";
+import {WatchParty} from "./WatchParty.jsx";
 
 
-export function MenuHandler({setUser, user}){
+export function MenuHandler({setUser}){
     const auth = getAuth();
-    const [page, setPage] = useState("Home");
+    const [page, setPage] = useState("WatchParty");
     const [favoriteGenre, setFavoriteGenre] = useState(null);
     const [loading, setLoading] = useState(true);
 
-
+    const userId = getAuth().currentUser.uid;
+    
     useEffect(() => {
-        if(user){
-            getFavoriteGenre(user.uid).then((genre)=>{
+        if(userId){
+            console.log("genere preferito di:", userId);
+            getFavoriteGenre(userId).then((genre)=>{
                 setFavoriteGenre(genre);
-                setLoading(false)
+                setLoading(false);
+            }).catch(error => {
+                console.log("errore nel recuperare il genere: ", error);
+                setLoading(false);
             })
-        }  else {
-            setLoading(false);
         }
-    }, [user])
+    }, [userId])
 
     const signOutHandler = async () => {
             await signOut(auth)
@@ -36,8 +41,9 @@ export function MenuHandler({setUser, user}){
     };
 
     if(loading){
-        return <div>Loading...</div>;
+        return <Fallback/>;
     }
+    
     return(
         <>
             {favoriteGenre === null ? <FavoriteGenre setFavoriteGenre={setFavoriteGenre} /> :
@@ -46,7 +52,7 @@ export function MenuHandler({setUser, user}){
                         <ul>
                             <li>
                                 <a className={page === "Home" ? "active" : ""} href="#"
-                                   onClick={() => setPage("Home")}>
+                                   onClick={() => setPage("WatchParty")}>
                                     Home
                                 </a>
                             </li>
@@ -69,9 +75,10 @@ export function MenuHandler({setUser, user}){
                             </li>
                         </ul>
                         <div>
-                            {page === "Home" && <Home/>}
+                            {page === "WatchParty" && <WatchParty/>}
                             {page === "News" && <News/>}
-                            {page === "Profile" && <Profile setUser={setUser}/>}
+                            {page === "Profile" && <Profile setUser={setUser} setFavoriteGenre={setFavoriteGenre}
+                            favoriteGenre={favoriteGenre} />}
                         </div>
                     </div>
                 )
