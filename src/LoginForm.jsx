@@ -13,14 +13,14 @@ export function LoginForm({setUser}) {
             alert("Password should be at least 6 characters long.");
             return;
         }
-        try{
+        try {
             const response = await signInWithEmailAndPassword(auth, email, password);
-            if(response !== undefined){
+            if (response !== undefined) {
                 setUser(response);
             } else {
                 console.log("ERRORE")
             }
-        } catch (error){
+        } catch (error) {
             console.log(error);
             setError(error.message);
         }
@@ -38,7 +38,7 @@ export function LoginForm({setUser}) {
                 <div className="mb-3">
                     <label htmlFor="exampleInputPassword1" className="form-label"></label>
                     <input type="password" className="form-control" id="exampleInputPassword1" placeholder={"Password"}
-                    onChange={(e) => setPassword(e.target.value)}/>
+                           onChange={(e) => setPassword(e.target.value)}/>
                 </div>
                 <div className={"button-box"}>
                     <button className="btn btn-primary btn-custom px-4" onClick={(e) => loginHandler(e)}>Login</button>

@@ -4,7 +4,7 @@ import {getAuth} from "firebase/auth";
 import {useState} from "react";
 import {Decider} from "./Decider.jsx";
 
-export function ConfirmParty({year, genre, partyName, setChoose}){
+export function ConfirmParty({year, genre, partyName, setChoose}) {
     const [showDecider, setShowDecider] = useState(false);
     const [partyId, setPartyId] = useState(null);
 
@@ -13,7 +13,7 @@ export function ConfirmParty({year, genre, partyName, setChoose}){
 
 
     const confirmHandler = async () => {
-        try{
+        try {
             const moviesData = await getMovies(genre, year);
 
             if (!moviesData.results || moviesData.results.length === 0) {
@@ -21,7 +21,7 @@ export function ConfirmParty({year, genre, partyName, setChoose}){
                 return;
             }
 
-            if(user != null){
+            if (user != null) {
                 console.log("Dati ricevuti:", moviesData.results);
                 const partyRef = await createParty(moviesData.results, user.email, partyName);
                 setPartyId(partyRef.id);
@@ -35,11 +35,9 @@ export function ConfirmParty({year, genre, partyName, setChoose}){
     }
 
 
-
-
-    return(
+    return (
         <>
-            {showDecider ? <Decider partyId = {partyId} /> : (
+            {showDecider ? <Decider partyId={partyId}/> : (
                 <div className={"home-page"}>
                     <div className="form-box">
                         <label className={"form-label"}>Party Name</label>
@@ -64,8 +62,9 @@ export function ConfirmParty({year, genre, partyName, setChoose}){
                             disabled
                         />
                         <div className={"button-container justify-content-center mt-2"}>
-                            <button type="button" className="btn btn-danger" onClick={() => setChoose("")} >Cancel</button>
-                            <button type="button" className="btn btn-success" onClick={confirmHandler} >Confirm</button>
+                            <button type="button" className="btn btn-danger" onClick={() => setChoose("")}>Cancel
+                            </button>
+                            <button type="button" className="btn btn-success" onClick={confirmHandler}>Confirm</button>
                         </div>
                     </div>
                 </div>

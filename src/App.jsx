@@ -26,28 +26,29 @@ function App() {
 
     return (
         <>
-            {!isOnline ? <Fallback retry={() => window.location.reload()} /> : user !== null ? <MenuHandler setUser={setUser}/> : <div className={"background-image"}>
-                <form className="form-box">
-                    <h1 className={"d-flex justify-content-center"}> {isLogin ? "Welcome" : "Create an account"}</h1>
-                    {isLogin ? <LoginForm setUser={setUser}/> : <RegisterForm setIsLogin={setIsLogin}/>}
-                    <p className={"d-flex align-content-center justify-content-center mt-3"}>
-                        {isLogin ? "Don't have an account?" : "Already have an account?"}
-                        &nbsp;<a href={"#"} onClick={(e) => {
-                        e.preventDefault();
-                        setIsLogin(!isLogin);
-                    }}>
-                        {isLogin ? "Register here" : "Sign in"}
-                    </a>
-                    </p>
-                    <hr/>
-                    <div className={"d-flex justify-content-center"}>
-                        <button type="button" className="google-sign-in-button"
-                                onClick={() => AuthGoogle(setUser)}>
-                            Continue with Google
-                        </button>
-                    </div>
-                </form>
-            </div>}
+            {!isOnline ? <Fallback retry={() => window.location.reload()}/> : user !== null ?
+                <MenuHandler setUser={setUser}/> : <div className={"background-image"}>
+                    <form className="form-box">
+                        <h1 className={"d-flex justify-content-center"}> {isLogin ? "Welcome" : "Create an account"}</h1>
+                        {isLogin ? <LoginForm setUser={setUser}/> : <RegisterForm setIsLogin={setIsLogin}/>}
+                        <p className={"d-flex align-content-center justify-content-center mt-3"}>
+                            {isLogin ? "Don't have an account?" : "Already have an account?"}
+                            &nbsp;<a href={"#"} onClick={(e) => {
+                            e.preventDefault();
+                            setIsLogin(!isLogin);
+                        }}>
+                            {isLogin ? "Register here" : "Sign in"}
+                        </a>
+                        </p>
+                        <hr/>
+                        <div className={"d-flex justify-content-center"}>
+                            <button type="button" className="google-sign-in-button"
+                                    onClick={() => AuthGoogle(setUser)}>
+                                Continue with Google
+                            </button>
+                        </div>
+                    </form>
+                </div>}
         </>
     )
 }

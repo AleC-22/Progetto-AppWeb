@@ -10,10 +10,10 @@ export function Year({setChoose, genre, partyName}) {
         setDecider(true);
     }
 
-    function buttonListCreator(){
+    function buttonListCreator() {
         const date = new Date();
         const currentYear = date.getFullYear();
-        let buttonList= [];
+        let buttonList = [];
         buttonList.push({text: "This year", year: currentYear});
         buttonList.push({text: "Last few years", year: currentYear - 5});
         buttonList.push({text: "Last 10 years", year: currentYear - 10});
@@ -26,7 +26,7 @@ export function Year({setChoose, genre, partyName}) {
     return (
         <>
             {decider ? /*<Decider year = {year} genre = {genre} partyName = {partyName} />*/
-                <ConfirmParty year = {year} genre = {genre} partyName = {partyName} setChoose = {setChoose}/>:
+                <ConfirmParty year={year} genre={genre} partyName={partyName} setChoose={setChoose}/> :
                 <>
                     <div className={"home-page background-image"}>
                         <h1>Which year of release?</h1>
@@ -39,7 +39,7 @@ export function Year({setChoose, genre, partyName}) {
                             </div>
                         ))}
 
-                        <button className={"btn btn-light btn-year"} onClick={()=>{
+                        <button className={"btn btn-light btn-year"} onClick={() => {
                             setChoose("");
                         }}>
                             Back

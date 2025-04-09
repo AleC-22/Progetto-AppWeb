@@ -1,19 +1,13 @@
-import { useEffect, useState } from "react";
-
+import {useEffect, useState} from "react";
 import {addMember, checkUser, getParties} from "./partyHandler.js";
 import {getAuth} from "firebase/auth";
 
-export function PartyList({ onJoin }) {
+export function PartyList({onJoin}) {
     const [parties, setParties] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const auth = getAuth();
     const user = auth.currentUser;
-
-    if(!user){
-        console.log("No user found");
-        return;
-    }
 
     useEffect(() => {
         async function fetchParties() {
@@ -34,11 +28,20 @@ export function PartyList({ onJoin }) {
         fetchParties().catch((error) => {
             console.error("Errore nel recupero dei party:", error);
         });
-    }, []);
+    }, [user]);
 
-    if (loading) return <p>Caricamento party...</p>;
+    if (!user) {
+        console.log("No user found");
+        return;
+    }
 
-    if (parties.length === 0) return <p>Nessun party disponibile</p>;
+    if (loading) {
+        return <p>Caricamento party...</p>;
+    }
+
+    if (parties.length === 0) {
+        return <p>Nessun party disponibile</p>;
+    }
 
     return (
         <div>
@@ -50,15 +53,15 @@ export function PartyList({ onJoin }) {
                             <span>{party.members.length}/4</span>
                             <button
                                 className="btn btn-primary"
-                                onClick={ async () => {
-                                    try{
-                                        await addMember(party.id,user.email);
+                                onClick={async () => {
+                                    try {
+                                        await addMember(party.id, user.email);
                                         onJoin(party.id);
-                                    }catch(e){
+                                    } catch (e) {
                                         console.error(e);
                                     }
                                 }}
-                                disabled = {party.members.length === 4 && checkUser(party.id, user.email)}
+                                disabled={party.members.length === 4 && checkUser(party.id, user.email)}
                             >
                                 Join
                             </button>

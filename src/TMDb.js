@@ -21,8 +21,8 @@ const genreMap = {
 }
 
 export const getMovies = async (genre, year, page = 1) => {
-    try{
-        const response = await axios.get(`${BASE_URL}/discover/movie`,{
+    try {
+        const response = await axios.get(`${BASE_URL}/discover/movie`, {
             params: {
                 api_key: API_KEY,
                 with_genres: getGenreID(genre).join(","),
@@ -34,13 +34,14 @@ export const getMovies = async (genre, year, page = 1) => {
             }
         });
         let responseObj = {}
-        function filmTransformer(){
+
+        function filmTransformer() {
             let films = [];
-            for(let responseFilm of response.data.results){
+            for (let responseFilm of response.data.results) {
                 let transorfedFilm = {
                     title: responseFilm.title,
                     description: responseFilm.overview,
-                    image: "https://image.tmdb.org/t/p/w300"+responseFilm.poster_path,
+                    image: "https://image.tmdb.org/t/p/w300" + responseFilm.poster_path,
                     rating: responseFilm.vote_average
                 }
                 films.push(transorfedFilm);
@@ -59,7 +60,7 @@ export const getMovies = async (genre, year, page = 1) => {
     }
 }
 
-function getGenreID(genreString){
+function getGenreID(genreString) {
     return genreString.split(",").map(g => genreMap[g.trim().toLowerCase()]).filter(id => id);
 }
 

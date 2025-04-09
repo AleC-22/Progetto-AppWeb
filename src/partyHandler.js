@@ -17,8 +17,8 @@ export async function createParty(films, ownerEmail, partyName, members = 4) {
     return await addDoc(collection(db, "watchParty"), watchPartyData);
 }
 
-export async function addMember(watchPartyId, memberMail){
-    const docRef = doc(db,"watchParty", watchPartyId);
+export async function addMember(watchPartyId, memberMail) {
+    const docRef = doc(db, "watchParty", watchPartyId);
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
@@ -26,7 +26,7 @@ export async function addMember(watchPartyId, memberMail){
         return;
     }
 
-    if(await checkUser(watchPartyId, memberMail)){
+    if (await checkUser(watchPartyId, memberMail)) {
         return;
     }
 
@@ -35,7 +35,7 @@ export async function addMember(watchPartyId, memberMail){
         isFinished: false,
         preferredFilms: []
     }
-    try{
+    try {
         await updateDoc(docRef, {
             members: arrayUnion(newMember),
         });
@@ -48,16 +48,16 @@ export async function addMember(watchPartyId, memberMail){
 export async function updatePreferredFilms(watchPartyId, memberMail, filmsArray) {
 
 
-    const docRef = doc(db,"watchParty", watchPartyId);
+    const docRef = doc(db, "watchParty", watchPartyId);
 
-    try{
+    try {
         const docSnap = await getDoc(docRef);
-        if(docSnap.exists()){
+        if (docSnap.exists()) {
             const data = docSnap.data();
             let members = data.members;
 
             for (let member of members) {
-                if(member.email === memberMail && !member.isFinished ){
+                if (member.email === memberMail && !member.isFinished) {
                     member.preferredFilms = filmsArray;
                     member.isFinished = true;
                     break;
@@ -72,10 +72,10 @@ export async function updatePreferredFilms(watchPartyId, memberMail, filmsArray)
 
 
 export async function getMatchedFilm(watchPartyId) {
-    const docRef = doc(db,"watchParty", watchPartyId);
+    const docRef = doc(db, "watchParty", watchPartyId);
     const docSnap = await getDoc(docRef);
 
-    if(!docSnap.exists()){
+    if (!docSnap.exists()) {
         alert("Party not found");
         return;
     }
@@ -86,22 +86,22 @@ export async function getMatchedFilm(watchPartyId) {
 
 
     let isPartyClosed = true;
-    for(let member of members){
-        if(!member.isFinished){
+    for (let member of members) {
+        if (!member.isFinished) {
             isPartyClosed = false;
             break;
         }
     }
 
-    if(isPartyClosed){
+    if (isPartyClosed) {
         let partyVotes = {};
-        for (let film of films){
+        for (let film of films) {
             partyVotes[film.title] = 0;
         }
         members.forEach(member => {
             member.preferredFilms.forEach(film => {
                 const title = film.title;
-                if(partyVotes[title] !== undefined){
+                if (partyVotes[title] !== undefined) {
                     partyVotes[title]++;
                 }
             })
@@ -110,8 +110,8 @@ export async function getMatchedFilm(watchPartyId) {
         console.log(partyVotes);
         let selectedFilm = "There are no matches";
         let selectedFilmVotes = 0;
-        for (let film in partyVotes){
-            if(partyVotes[film] > selectedFilmVotes){
+        for (let film in partyVotes) {
+            if (partyVotes[film] > selectedFilmVotes) {
                 selectedFilmVotes = partyVotes[film];
                 selectedFilm = film;
             }
@@ -126,23 +126,23 @@ export function getParties() {
     return getDocs(collection(db, "watchParty"));
 }
 
-export async function deleteParty(watchPartyId){
-    return await deleteDoc(doc(db,"watchParty", watchPartyId));
+export async function deleteParty(watchPartyId) {
+    return await deleteDoc(doc(db, "watchParty", watchPartyId));
 }
 
-export async function checkUser(watchPartyId, memberEmail){
+export async function checkUser(watchPartyId, memberEmail) {
     const docRef = doc(db, "watchParty", watchPartyId);
     const docSnap = await getDoc(docRef);
 
-    if(!docSnap.exists()){
+    if (!docSnap.exists()) {
         alert("Party not found");
         return;
     }
 
     const data = docSnap.data();
 
-    for(let member of data.members){
-        if(member.email === memberEmail){
+    for (let member of data.members) {
+        if (member.email === memberEmail) {
             return true;
         }
     }

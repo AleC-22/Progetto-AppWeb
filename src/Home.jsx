@@ -10,7 +10,7 @@ export function Home({partyName}) {
         setChoose(true);
     }
 
-    function buttonListCreator(){
+    function buttonListCreator() {
         let buttonList = [];
         buttonList.push({genres: "Action, Adventure, Drama", macroCategory: "Dramatic"});
         buttonList.push({genres: "Horror, Thriller, Mystery", macroCategory: "Anxiety"});
@@ -24,7 +24,7 @@ export function Home({partyName}) {
         <>
 
             <div className={"home-page background-image"}>
-                {choose ? <Year setChoose={setChoose} genre={genre} partyName={partyName} /> :
+                {choose ? <Year setChoose={setChoose} genre={genre} partyName={partyName}/> :
                     <>
                         <h1 className={"header"}>How do you feel?</h1>
                         {buttonListCreator().map((button, index) => (

@@ -7,22 +7,21 @@ export function News() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
-    function handleNextPage(){
+    function handleNextPage() {
         setCurrentPage((prevPage) => prevPage === totalPages ? prevPage : prevPage + 1);
     }
 
-    function handlePrevPage(){
+    function handlePrevPage() {
         setCurrentPage((prevPage) => prevPage === 1 ? 1 : prevPage - 1);
     }
 
     useEffect(() => {
-        getUpcomingMovies(currentPage).then(data =>{
+        getUpcomingMovies(currentPage).then(data => {
             setMovies(data.results);
             setLoading(false);
             setTotalPages(data.totalPages);
         });
     }, [currentPage]);
-
 
 
     return (
@@ -31,17 +30,17 @@ export function News() {
             {loading ? <p>Loading...</p> :
                 (
                     <div className={"movies-grid"}>
-                    {movies.map(movie => (
-                        <div key={movie.id} className={"movie-card-news"}>
-                            <img
-                                src={`https://image.tmdb.org/t/p/w300${movie.poster_path}`}
-                                alt={movie.title}
-                                className={"movie-poster-news"}
+                        {movies.map(movie => (
+                            <div key={movie.id} className={"movie-card-news"}>
+                                <img
+                                    src={`https://image.tmdb.org/t/p/w300${movie.poster_path}`}
+                                    alt={movie.title}
+                                    className={"movie-poster-news"}
                                 />
-                            <h3 className={"h3-news"}>{movie.title}</h3>
-                            <p>📅 Release: {movie.release_date}</p>
-                        </div>
-                    ))}
+                                <h3 className={"h3-news"}>{movie.title}</h3>
+                                <p>📅 Release: {movie.release_date}</p>
+                            </div>
+                        ))}
                     </div>
                 )
             }
@@ -50,5 +49,5 @@ export function News() {
                 <button className="btn btn-dark" onClick={handleNextPage}>➡️</button>
             </div>
         </div>
-        );
+    );
 }

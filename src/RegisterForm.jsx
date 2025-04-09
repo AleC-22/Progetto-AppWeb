@@ -1,7 +1,7 @@
 import {useState} from "react";
 import {getAuth, createUserWithEmailAndPassword} from "firebase/auth";
 
-export function RegisterForm({setIsLogin}){
+export function RegisterForm({setIsLogin}) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -11,7 +11,7 @@ export function RegisterForm({setIsLogin}){
 
     const registerHandler = async (e) => {
         e.preventDefault();
-        if(!email || !password){
+        if (!email || !password) {
             alert("Please enter a valid email and password");
             return;
         }
@@ -19,22 +19,22 @@ export function RegisterForm({setIsLogin}){
             alert("Password should be at least 6 characters long.");
             return;
         }
-        if (password !== confirmPassword){
+        if (password !== confirmPassword) {
             alert("Passwords do not match");
             return;
         }
-        try{
+        try {
             await createUserWithEmailAndPassword(auth, email, password)
-                .then(()=>{
+                .then(() => {
                     setIsLogin(true);
                 });
-        } catch (error){
+        } catch (error) {
             console.log(error);
             setError(error.message);
         }
     }
 
-    return(
+    return (
         <>
             <div>
                 <div className="my-3">
@@ -56,7 +56,7 @@ export function RegisterForm({setIsLogin}){
                     <label className="form-label"></label>
                     <input type="password" className="form-control" id="exampleInputPassword2"
                            placeholder={"Confirm your password"}
-                           onChange={(e) => setConfirmPassword(e.target.value)} />
+                           onChange={(e) => setConfirmPassword(e.target.value)}/>
                 </div>
 
                 <div className={"button-box mt-3"}>

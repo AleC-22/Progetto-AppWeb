@@ -11,11 +11,11 @@ export function WatchParty() {
 
 
     if (joinedPartyId) {
-        return <Decider partyId={joinedPartyId} />;
+        return <Decider partyId={joinedPartyId}/>;
     }
 
     if (createdPartyName) {
-        return <Home partyName={createdPartyName} />;
+        return <Home partyName={createdPartyName}/>;
     }
 
     return (
@@ -29,7 +29,7 @@ export function WatchParty() {
                 <div className={"home-page background-image"}>
                     <div className={"form-box"}>
                         <h2 className="mb-4">Join a Watch Party</h2>
-                        <PartyList onJoin={setJoinedPartyId} />
+                        <PartyList onJoin={setJoinedPartyId}/>
                     </div>
 
                     <div className={"button-container mt-4"}>

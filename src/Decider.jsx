@@ -39,28 +39,29 @@ export function Decider({partyId}) {
 
     useEffect(() => {
         async function loadMovies() {
-            try{
+            try {
                 const docRef = doc(db, "watchParty", partyId);
                 const docSnap = await getDoc(docRef);
 
-                if(docSnap.exists()) {
+                if (docSnap.exists()) {
                     const data = docSnap.data();
                     setMovies(docSnap.data().films);
                     setCreatorEmail(data.partyOwnerEmail);
-                    if(user.email){
-                       for (let member of data.members){
-                           if(member.email === user.email){
-                               setIsFinished(member.isFinished);
-                           }
-                       }
+                    if (user.email) {
+                        for (let member of data.members) {
+                            if (member.email === user.email) {
+                                setIsFinished(member.isFinished);
+                            }
+                        }
                     }
                 } else {
                     console.log("No party");
                 }
-            } catch(error) {
+            } catch (error) {
                 console.log(error);
             }
         }
+
         loadMovies().catch((error) => {
             console.log(error);
         });
@@ -85,10 +86,9 @@ export function Decider({partyId}) {
     }, [currentIndex, movies.length, isSubmitted, partyId, preferredMovies, user.email]);
 
 
-
     function handleNextMovie() {
         console.log(currentIndex)
-        setCurrentIndex(currentIndex+1);
+        setCurrentIndex(currentIndex + 1);
     }
 
     function handleLikeButton() {
@@ -98,78 +98,77 @@ export function Decider({partyId}) {
 
     const movie = movies[currentIndex];
 
-    function handleMovieRating(){
+    function handleMovieRating() {
         let movieRating = 0.0;
-        if(movie.rating != null) {
+        if (movie.rating != null) {
             movieRating = Math.round(movie.rating * 10) / 10
         }
         return movieRating;
     }
 
 
-
     return (
         <>
-            {showWatchParty ? <WatchParty/> : currentIndex === movies.length || isFinished ?<div className={"background-image home-page"}> END OF THE LIST :)
-                {user && user.email === creatorEmail && (
-                <div className={"close-voting-btn-container"}>
-                    <button className={"btn btn-danger"} onClick={async () => {
-                        showNotification();
-                        try{
-                            const matched = await getMatchedFilm(partyId);
-                            if(matched){
-                                alert("Match: " + matched);
-                                await deleteParty(partyId);
-                                setShowWatchParty(true);
-                            }
-                        } catch (err) {
-                            console.log(err);
-                        }
-                    }}
-                    >
-                        Close party
-                    </button>
-                </div>
-            )} </div>  : movie ? (
-                <>
-                    <div className={"background-image home-page"}>
-                        <div className="movie-card">
-                            <img
-                                src={movie.image}
-                                alt={movie.title}
-                                className={"movie-poster"}
-                            />
+            {showWatchParty ? <WatchParty/> : currentIndex === movies.length || isFinished ?
+                <div className={"background-image home-page"}> END OF THE LIST :)
+                    {user && user.email === creatorEmail && (
+                        <div className={"close-voting-btn-container"}>
+                            <button className={"btn btn-danger"} onClick={async () => {
+                                showNotification();
+                                try {
+                                    const matched = await getMatchedFilm(partyId);
+                                    if (matched) {
+                                        alert("Match: " + matched);
+                                        await deleteParty(partyId);
+                                        setShowWatchParty(true);
+                                    }
+                                } catch (err) {
+                                    console.log(err);
+                                }
+                            }}
+                            >
+                                Close party
+                            </button>
+                        </div>
+                    )} </div> : movie ? (
+                    <>
+                        <div className={"background-image home-page"}>
+                            <div className="movie-card">
+                                <img
+                                    src={movie.image}
+                                    alt={movie.title}
+                                    className={"movie-poster"}
+                                />
 
-                            <div className="movie-info">
+                                <div className="movie-info">
 
-                                <h3 className={"text-black"}>
-                                    {movie.title}
-                                </h3>
+                                    <h3 className={"text-black"}>
+                                        {movie.title}
+                                    </h3>
 
-                                <p className={"movie-description"}>
-                                    {movie.description}
-                                </p>
+                                    <p className={"movie-description"}>
+                                        {movie.description}
+                                    </p>
 
-                                <div className={"ratings"}>
-                                    <span className={"imdb"}>Rating: {handleMovieRating()}</span>
+                                    <div className={"ratings"}>
+                                        <span className={"imdb"}>Rating: {handleMovieRating()}</span>
+                                    </div>
+
                                 </div>
 
                             </div>
 
+                            <div className={"button-container"}>
+                                <button className="button button5" onClick={handleNextMovie}>👎</button>
+                                <button className="button button5" onClick={() => handleLikeButton(movie.title)}>
+                                    👍
+                                </button>
+                            </div>
                         </div>
-
-                        <div className={"button-container"}>
-                            <button className="button button5" onClick={handleNextMovie}>👎</button>
-                            <button className="button button5" onClick={() => handleLikeButton(movie.title)}>
-                                👍
-                            </button>
-                        </div>
-                    </div>
-                </>
-            ) : (<p> Nessun film disponibile...</p>)}
+                    </>
+                ) : (<p> Nessun film disponibile...</p>)}
         </>
     );
-
 
 
 }

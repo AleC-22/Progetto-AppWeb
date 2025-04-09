@@ -1,7 +1,7 @@
 import {getAuth, deleteUser, signOut} from "firebase/auth";
 import {saveFavoriteGenre} from "./SetterAndGetter.js";
 
-export function Profile({setUser, setFavoriteGenre, favoriteGenre}){
+export function Profile({setUser, setFavoriteGenre, favoriteGenre}) {
 
     const auth = getAuth();
     const user = auth.currentUser;
@@ -27,15 +27,15 @@ export function Profile({setUser, setFavoriteGenre, favoriteGenre}){
     };
 
 
-    const deleteAccountHandler = async() => {
+    const deleteAccountHandler = async () => {
         const user = getAuth().currentUser;
 
-        if(!user){
+        if (!user) {
             console.error("User not found!");
             return;
         }
         const confirmDelete = window.confirm("Are you sure you want to delete this account?");
-        if(confirmDelete){
+        if (confirmDelete) {
             try {
                 await deleteUser(user);
                 alert("User Deleted");
@@ -56,8 +56,7 @@ export function Profile({setUser, setFavoriteGenre, favoriteGenre}){
                 <label className={"form-label"}> Select your favorite genre</label>
                 <select
                     value={favoriteGenre}
-                    onChange={(e) =>
-                    {
+                    onChange={(e) => {
                         selectionHandler(e.target.value);
                         console.log(favoriteGenre);
                     }}
