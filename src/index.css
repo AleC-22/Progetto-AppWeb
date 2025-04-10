@@ -213,6 +213,10 @@ li:last-child {
     border-radius: 50%;
 }
 
+.button5:hover {
+    background-color: lightgray;
+}
+
 .button-container {
     display: flex;
     gap: 15px;

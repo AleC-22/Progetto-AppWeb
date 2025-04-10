@@ -5,7 +5,6 @@ export function LoginForm({setUser}) {
     const auth = getAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
 
     const loginHandler = async (e) => {
         e.preventDefault();
@@ -22,7 +21,9 @@ export function LoginForm({setUser}) {
             }
         } catch (error) {
             console.log(error);
-            setError(error.message);
+            if (error.code === "auth/invalid-credential") {
+                alert("User not found. Check your email or password and retry");
+            }
         }
     }
 

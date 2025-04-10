@@ -15,7 +15,6 @@ export function Decider({partyId}) {
     const [isFinished, setIsFinished] = useState(false);
     const [showWatchParty, setShowWatchParty] = useState(false);
 
-
     const auth = getAuth();
     const user = auth.currentUser;
 
@@ -28,14 +27,6 @@ export function Decider({partyId}) {
             });
         }
     }, []);
-
-    function showNotification() {
-        if (Notification.permission === "granted") {
-            new Notification("🍿 Watch Party", {
-                body: "A decision has been made 🥳",
-            });
-        }
-    }
 
     useEffect(() => {
         async function loadMovies() {
@@ -66,6 +57,15 @@ export function Decider({partyId}) {
             console.log(error);
         });
     }, [partyId]);
+
+
+    function showNotification() {
+        if (Notification.permission === "granted") {
+            new Notification("🍿 Watch Party", {
+                body: "A decision has been made 🥳",
+            });
+        }
+    }
 
     useEffect(() => {
         async function submitPreferences() {
@@ -110,7 +110,8 @@ export function Decider({partyId}) {
     return (
         <>
             {showWatchParty ? <WatchParty/> : currentIndex === movies.length || isFinished ?
-                <div className={"background-image home-page"}> END OF THE LIST :)
+                <div className={"background-image home-page"}> END OF THE LIST :) <br/> You will able to close the party
+                    after everyone will finishing voting.
                     {user && user.email === creatorEmail && (
                         <div className={"close-voting-btn-container"}>
                             <button className={"btn btn-danger"} onClick={async () => {

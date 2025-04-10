@@ -1,13 +1,31 @@
 import {getAuth, deleteUser, signOut} from "firebase/auth";
-import {saveFavoriteGenre} from "./SetterAndGetter.js";
+import {getFavoriteGenre, saveFavoriteGenre} from "./SetterAndGetter.js";
+import {useEffect, useState} from "react";
 
-export function Profile({setUser, setFavoriteGenre, favoriteGenre}) {
-
+export function Profile({setUser}) {
+    const [favoriteGenre, setFavoriteGenre] = useState(null);
     const auth = getAuth();
     const user = auth.currentUser;
 
     const genres = ["Action", "Adventure", "Drama", "Horror", "Thriller", "Mistery", "Comedy", "Family",
         "Romance", "History", "Documentary", "Fantasy", "Sci-Fi"];
+
+
+    useEffect(() => {
+        const fetchFavoriteGenre = async () => {
+            if (user) {
+                const genre = await getFavoriteGenre(user.uid);
+                if (genre) {
+                    setFavoriteGenre(genre);
+                }
+            }
+        };
+
+        fetchFavoriteGenre().catch((err) => {
+            console.error(err);
+        });
+    }, [user]);
+
 
     const selectionHandler = (genre) => {
         saveFavoriteGenre(user.uid, genre).then(() => {

@@ -11,7 +11,6 @@ import {WatchParty} from "./WatchParty.jsx";
 export function MenuHandler({setUser}) {
     const auth = getAuth();
     const [page, setPage] = useState("WatchParty");
-    const [favoriteGenre, setFavoriteGenre] = useState(null);
     const [loading, setLoading] = useState(true);
 
     const userId = getAuth().currentUser.uid;
@@ -74,7 +73,7 @@ export function MenuHandler({setUser}) {
                 <div>
                     {page === "WatchParty" && <WatchParty/>}
                     {page === "News" && <News/>}
-                    {page === "Profile" && <Profile setUser={setUser} setFavoriteGenre={setFavoriteGenre}/>}
+                    {page === "Profile" && <Profile setUser={setUser}/>}
                 </div>
             </div>
         </>
