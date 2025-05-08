@@ -61,7 +61,7 @@ export function Decider({partyId}) {
 
     function showNotification() {
         if (Notification.permission === "granted") {
-            new Notification("🍿 Watch Party", {
+            new Notification("🍿 Movie Party", {
                 body: "A decision has been made 🥳",
             });
         }
