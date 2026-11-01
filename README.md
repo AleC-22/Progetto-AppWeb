@@ -21,10 +21,11 @@ Interfaccia bilingue **Italiano / English**, installabile come PWA.
 
 - **React 19** + **Vite 6**
 - **Firebase 11**: Authentication + Cloud Firestore
-- **TMDb API** per film e prossime uscite
+- **TMDb API** per film e prossime uscite, tramite proxy server-side
 - **Bootstrap 5** + CSS personalizzato
-- **Vitest** per i test della logica di matching
+- **Vitest** per i test di matching e proxy
 - **vite-plugin-pwa** per la PWA
+- **Vercel Functions** (opzionale) per il proxy TMDb in produzione
 
 ## Avvio rapido
 
@@ -50,8 +51,10 @@ VITE_Firebase_storageBucket=...
 VITE_Firebase_messagingSenderId=...
 VITE_Firebase_appId=...
 VITE_Firebase_measurementId=...
-VITE_TMDb_Key=...
+TMDB_API_KEY=...
 ```
+
+`TMDB_API_KEY` non ha il prefisso `VITE_`: resta disponibile solo al server (proxy di sviluppo e funzione Vercel) e non finisce nel bundle del browser.
 
 Poi avvia:
 
@@ -90,9 +93,36 @@ Le regole in [`firestore.rules`](./firestore.rules) consentono:
 
 ## TMDb
 
-La chiave si ottiene gratuitamente da [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api) e va inserita in `VITE_TMDb_Key`.
+La chiave si ottiene gratuitamente da [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api) e va inserita in `TMDB_API_KEY` dentro `.env`.
+
+Il browser non chiama mai TMDb direttamente e non riceve mai la chiave:
+
+```text
+Browser → /api/tmdb/movie/upcoming?page=1&language=it-IT
+              ↓
+Proxy (Vite in locale, Vercel in produzione)
+              ↓
+TMDb API con TMDB_API_KEY
+```
+
+- In sviluppo il proxy è un middleware di Vite (`server/tmdbProxyPlugin.js`), quindi `npm run dev` funziona senza configurazioni extra.
+- In produzione la stessa logica è esposta da `api/tmdb/[...path].js` come Vercel Function.
+- Il proxy accetta solo gli endpoint usati dall'app (`discover/movie`, `movie/upcoming`) e filtra i parametri, così non diventa un proxy aperto.
+- Le risposte vengono messe in cache per 5 minuti (`s-maxage=300`).
 
 Senza chiave TMDb l'app resta avviabile, ma la creazione dei party e la sezione "Prossime uscite" mostrano un messaggio di configurazione mancante.
+
+### Deploy su Vercel
+
+1. Importa il repository su Vercel.
+2. Framework preset: **Vite**; build command `npm run build`; output directory `dist`.
+3. In **Settings → Environment Variables** aggiungi `TMDB_API_KEY` (senza prefisso `VITE_`).
+4. Le variabili `VITE_Firebase_*` restano necessarie per il client e vanno aggiunte allo stesso modo.
+5. Dopo il deploy aggiungi il dominio Vercel tra i domini autorizzati di Firebase Authentication.
+
+Non serve un `vercel.json` finché l'app resta su una singola pagina senza routing client-side. Se in futuro aggiungi route come `/party/:id`, servirà un rewrite SPA verso `/index.html`.
+
+> Il piano Vercel Hobby è destinato a progetti personali/non commerciali. Per un uso commerciale serve Vercel Pro, oltre all'accordo TMDb descritto sotto.
 
 ### Attribuzione e uso commerciale
 
@@ -106,7 +136,7 @@ La chiave API gratuita di TMDb è pensata per **uso non commerciale**. Se in fut
 - FAQ ufficiale: [developer.themoviedb.org/docs/faq](https://developer.themoviedb.org/docs/faq)
 - Contatto commerciale: [sales@themoviedb.org](mailto:sales@themoviedb.org?subject=Commercial%20API%20Use)
 
-> ⚠️ Le variabili `VITE_*` vengono incluse nel bundle JavaScript e sono visibili nel browser. Per un'app commerciale non esporre la chiave TMDb lato client: usa un backend/proxy che la conservi e applichi rate limit e cache.
+> ⚠️ Le variabili `VITE_*` vengono incluse nel bundle JavaScript e sono visibili nel browser. La chiave TMDb usa quindi `TMDB_API_KEY`, gestita dal proxy server-side: non reintrodurre `VITE_TMDb_Key`.
 
 Questa sezione è informativa e non sostituisce una consulenza legale: prima di pubblicare un prodotto commerciale verifica i termini aggiornati e l'accordo con TMDb.
 
@@ -147,6 +177,12 @@ Il profilo `.env.emulator` usa un progetto demo e `VITE_DEMO_MOVIES=true`, quind
 ## Struttura del progetto
 
 ```
+api/
+└── tmdb/[...path].js       # Vercel Function: proxy TMDb in produzione
+server/
+├── tmdbProxy.js            # Logica condivisa: whitelist, auth, cache
+├── tmdbProxy.test.js       # Test del proxy
+└── tmdbProxyPlugin.js      # Middleware proxy per Vite dev/preview
 src/
 ├── App.jsx                 # Auth gate + login/registrazione
 ├── MenuHandler.jsx         # Navigazione Home / News / Profilo
@@ -161,7 +197,7 @@ src/
 ├── Firebase.js             # Init Firebase + emulatori
 ├── partyHandler.js         # Transazioni e subscription Firestore
 ├── matching.js             # Algoritmo di matching (testato)
-├── TMDb.js                 # Client TMDb + fallback demo
+├── TMDb.js                 # Client del proxy TMDb + fallback demo
 ├── genres.js               # Generi condivisi
 ├── i18n/                   # Dizionari IT/EN e provider
 └── index.css               # Tema e responsive
@@ -200,7 +236,9 @@ I test coprono:
 - nessun voto;
 - film sconosciuti;
 - duplicati dello stesso film;
-- compatibilità con party creati prima dell'introduzione degli ID TMDb.
+- compatibilità con party creati prima dell'introduzione degli ID TMDb;
+- URL delle locandine TMDb;
+- whitelist, autenticazione e gestione errori del proxy TMDb.
 
 ## Roadmap
 
@@ -214,5 +252,6 @@ I test coprono:
 ## Sicurezza
 
 - Non committare `.env`, service account o chiavi API.
+- La chiave TMDb vive solo lato server (`TMDB_API_KEY`), mai nel bundle client.
 - Le regole Firestore sono versionate in `firestore.rules`.
 - L'account di test presente nelle vecchie versioni del README è stato rimosso: createne uno nuovo o eliminalo dalla console Firebase se non serve più.

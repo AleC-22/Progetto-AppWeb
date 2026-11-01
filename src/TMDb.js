@@ -2,9 +2,10 @@ import axios from "axios";
 import {getGenreIDs} from "./genres.js";
 import {DEMO_FILMS, DEMO_UPCOMING} from "./demoFilms.js";
 
-const API_KEY = import.meta.env.VITE_TMDb_Key;
 const USE_DEMO_MOVIES = import.meta.env.VITE_DEMO_MOVIES === "true";
-const BASE_URL = "https://api.themoviedb.org/3";
+// The browser calls our proxy, which adds the TMDb credentials server-side.
+const BASE_URL = "/api/tmdb";
+const REQUEST_TIMEOUT = 15000;
 const POSTER_PLACEHOLDER = "/poster-placeholder.svg";
 
 export function getImageUrl(path, size = "w300") {
@@ -48,62 +49,15 @@ function emptyResult(error) {
     };
 }
 
-export const getMovies = async (genre, year, page = 1, language = "it-IT") => {
-    if (!API_KEY) {
-        if (USE_DEMO_MOVIES) {
-            return {results: DEMO_FILMS, actualPage: 1, totalPages: 1};
-        }
-        return emptyResult("missing-key");
+async function requestMovieList(endpoint, params, demoResults, errorLabel) {
+    if (USE_DEMO_MOVIES) {
+        return {results: demoResults, actualPage: 1, totalPages: 1};
     }
 
     try {
-        const genreIDs = getGenreIDs(genre);
-        const params = {
-            api_key: API_KEY,
-            language,
-            page,
-            include_adult: false,
-            sort_by: "popularity.desc",
-            "vote_count.gte": 20,
-            region: language === "it-IT" ? "IT" : "US",
-        };
-
-        if (genreIDs.length > 0) {
-            params.with_genres = genreIDs.join(",");
-        }
-        if (year) {
-            params["primary_release_date.gte"] = `${year}-01-01`;
-        }
-
-        const response = await axios.get(`${BASE_URL}/discover/movie`, {params});
-
-        return {
-            results: response.data.results.map(transformFilm),
-            actualPage: response.data.page,
-            totalPages: Math.min(response.data.total_pages || 1, 500),
-        };
-    } catch (error) {
-        console.log("Errore nel recupero film: ", error);
-        return emptyResult("request-failed");
-    }
-};
-
-export const getUpcomingMovies = async (page = 1, language = "it-IT") => {
-    if (!API_KEY) {
-        if (USE_DEMO_MOVIES) {
-            return {results: DEMO_UPCOMING, actualPage: 1, totalPages: 1};
-        }
-        return emptyResult("missing-key");
-    }
-
-    try {
-        const response = await axios.get(`${BASE_URL}/movie/upcoming`, {
-            params: {
-                api_key: API_KEY,
-                language,
-                page,
-                region: language === "it-IT" ? "IT" : "US",
-            },
+        const response = await axios.get(`${BASE_URL}/${endpoint}`, {
+            params,
+            timeout: REQUEST_TIMEOUT,
         });
 
         return {
@@ -112,7 +66,37 @@ export const getUpcomingMovies = async (page = 1, language = "it-IT") => {
             totalPages: Math.min(response.data.total_pages || 1, 500),
         };
     } catch (error) {
-        console.log("Errore nel recupero dei film in uscita: ", error);
-        return emptyResult("request-failed");
+        console.error(errorLabel, error);
+        const code = error?.response?.data?.error;
+        return emptyResult(code === "missing-key" ? "missing-key" : "request-failed");
     }
+}
+
+export const getMovies = async (genre, year, page = 1, language = "it-IT") => {
+    const genreIDs = getGenreIDs(genre);
+    const params = {
+        language,
+        page,
+        include_adult: false,
+        sort_by: "popularity.desc",
+        "vote_count.gte": 20,
+        region: language === "it-IT" ? "IT" : "US",
+    };
+
+    if (genreIDs.length > 0) {
+        params.with_genres = genreIDs.join(",");
+    }
+    if (year) {
+        params["primary_release_date.gte"] = `${year}-01-01`;
+    }
+
+    return requestMovieList("discover/movie", params, DEMO_FILMS, "Errore nel recupero film: ");
+};
+
+export const getUpcomingMovies = async (page = 1, language = "it-IT") => {
+    return requestMovieList("movie/upcoming", {
+        language,
+        page,
+        region: language === "it-IT" ? "IT" : "US",
+    }, DEMO_UPCOMING, "Errore nel recupero dei film in uscita: ");
 };

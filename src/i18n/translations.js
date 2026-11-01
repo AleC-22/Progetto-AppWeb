@@ -117,7 +117,7 @@ export const translations = {
             create: "Crea il party",
             noMovies: "Nessun film trovato con questi filtri. Prova un altro genere o anno.",
             createError: "Creazione del party non riuscita. Riprova.",
-            missingTmdbKey: "Manca la chiave TMDb: aggiungi VITE_TMDb_Key nel file .env.",
+            missingTmdbKey: "Manca la chiave TMDb: aggiungi TMDB_API_KEY nel file .env.",
         },
         decider: {
             loading: "Caricamento party...",
@@ -153,7 +153,7 @@ export const translations = {
             page: "Pagina {{page}} di {{total}}",
             empty: "Nessuna uscita disponibile.",
             error: "Impossibile caricare le prossime uscite.",
-            missingTmdbKey: "Aggiungi VITE_TMDb_Key nel file .env per vedere le prossime uscite.",
+            missingTmdbKey: "Aggiungi TMDB_API_KEY nel file .env per vedere le prossime uscite.",
             loading: "Caricamento uscite...",
         },
         profile: {
@@ -313,7 +313,7 @@ export const translations = {
             create: "Create party",
             noMovies: "No movies found with these filters. Try another genre or year.",
             createError: "Party creation failed. Please try again.",
-            missingTmdbKey: "TMDb key missing: add VITE_TMDb_Key to your .env file.",
+            missingTmdbKey: "TMDb key missing: add TMDB_API_KEY to your .env file.",
         },
         decider: {
             loading: "Loading party...",
@@ -349,7 +349,7 @@ export const translations = {
             page: "Page {{page}} of {{total}}",
             empty: "No upcoming movies available.",
             error: "Could not load upcoming movies.",
-            missingTmdbKey: "Add VITE_TMDb_Key to your .env file to see upcoming movies.",
+            missingTmdbKey: "Add TMDB_API_KEY to your .env file to see upcoming movies.",
             loading: "Loading upcoming movies...",
         },
         profile: {

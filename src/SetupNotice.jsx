@@ -12,7 +12,7 @@ export function SetupNotice() {
                     <LanguageSwitcher/>
                 </div>
                 <p>{t("setup.text")}</p>
-                <pre className="setup-code">VITE_Firebase_apiKey=...{"\n"}VITE_Firebase_authDomain=...{"\n"}VITE_Firebase_projectId=...{"\n"}VITE_Firebase_appId=...{"\n"}VITE_TMDb_Key=...</pre>
+                <pre className="setup-code">VITE_Firebase_apiKey=...{"\n"}VITE_Firebase_authDomain=...{"\n"}VITE_Firebase_projectId=...{"\n"}VITE_Firebase_appId=...{"\n"}TMDB_API_KEY=...</pre>
                 <p className="mb-0 text-muted">{t("setup.hint")}</p>
             </div>
         </div>
