@@ -1,44 +1,59 @@
-import {Year} from "./Year.jsx";
 import {useState} from "react";
+import {Year} from "./Year.jsx";
+import {translateGenres} from "./genres.js";
+import {useI18n} from "./i18n/context.js";
 
-export function Home({partyName}) {
+const CATEGORIES = [
+    {titleKey: "home.dramatic", genres: ["Action", "Adventure", "Drama"]},
+    {titleKey: "home.anxiety", genres: ["Horror", "Thriller", "Mystery"]},
+    {titleKey: "home.gentle", genres: ["Comedy", "Family", "Romance"]},
+    {titleKey: "home.curious", genres: ["History", "Documentary"]},
+    {titleKey: "home.outOfThisWorld", genres: ["Fantasy", "Sci-Fi"]},
+];
+
+export function Home({partyName, user, onPartyCreated, onCancel}) {
+    const {t} = useI18n();
     const [choose, setChoose] = useState(false);
     const [genre, setGenre] = useState("");
 
-    function handleGenresChange(genre) {
-        setGenre(genre);
+    function handleGenreChange(genres) {
+        setGenre(genres.join(", "));
         setChoose(true);
     }
 
-    function buttonListCreator() {
-        let buttonList = [];
-        buttonList.push({genres: "Action, Adventure, Drama", macroCategory: "Dramatic"});
-        buttonList.push({genres: "Horror, Thriller, Mystery", macroCategory: "Anxiety"});
-        buttonList.push({genres: "Comedy, Family, Romance", macroCategory: "Gentle"});
-        buttonList.push({genres: "History, Documentary", macroCategory: "Curious"});
-        buttonList.push({genres: "Fantasy, Sci-Fi", macroCategory: "Out of this world"});
-        return buttonList;
+    if (choose) {
+        return (
+            <Year
+                setChoose={setChoose}
+                genre={genre}
+                partyName={partyName}
+                user={user}
+                onPartyCreated={onPartyCreated}
+            />
+        );
     }
 
     return (
-        <>
+        <div className="home-page background-image">
+            <h1 className="header">{t("home.question")}</h1>
 
-            <div className={"home-page background-image"}>
-                {choose ? <Year setChoose={setChoose} genre={genre} partyName={partyName}/> :
-                    <>
-                        <h1 className={"header"}>How do you feel?</h1>
-                        {buttonListCreator().map((button, index) => (
-                            <div key={index}>
-                                <button className={"btn btn-danger btn-home"}
-                                        onClick={() => handleGenresChange(button.genres)}>
-                                    {button.macroCategory} <br/>
-                                    ({button.genres})
-                                </button>
-                            </div>
-                        ))}
-                    </>
-                }
-            </div>
-        </>
+            {CATEGORIES.map((category) => (
+                <div key={category.titleKey}>
+                    <button
+                        type="button"
+                        className="btn btn-danger btn-home"
+                        onClick={() => handleGenreChange(category.genres)}
+                    >
+                        {t(category.titleKey)}
+                        <br/>
+                        <span className="genre-hint">({translateGenres(category.genres.join(", "), t)})</span>
+                    </button>
+                </div>
+            ))}
+
+            <button type="button" className="btn btn-light btn-year mt-2" onClick={onCancel}>
+                {t("home.back")}
+            </button>
+        </div>
     );
 }

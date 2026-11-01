@@ -1,74 +1,69 @@
+import {useState} from "react";
 import {getMovies} from "./TMDb.js";
 import {createParty} from "./partyHandler.js";
-import {getAuth} from "firebase/auth";
-import {useState} from "react";
-import {Decider} from "./Decider.jsx";
+import {translateGenres} from "./genres.js";
+import {useI18n} from "./i18n/context.js";
 
-export function ConfirmParty({year, genre, partyName, setChoose}) {
-    const [showDecider, setShowDecider] = useState(false);
-    const [partyId, setPartyId] = useState(null);
-
-    const auth = getAuth();
-    const user = auth.currentUser;
-
+export function ConfirmParty({year, genre, partyName, user, onPartyCreated, onCancel}) {
+    const {t, lang} = useI18n();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const confirmHandler = async () => {
-        try {
-            const moviesData = await getMovies(genre, year);
+        setLoading(true);
+        setError("");
 
+        try {
+            const moviesData = await getMovies(genre, year, 1, lang === "it" ? "it-IT" : "en-US");
+
+            if (moviesData.error === "missing-key") {
+                setError(t("confirm.missingTmdbKey"));
+                return;
+            }
+            if (moviesData.error) {
+                setError(t("confirm.createError"));
+                return;
+            }
             if (!moviesData.results || moviesData.results.length === 0) {
-                alert("No movies found");
+                setError(t("confirm.noMovies"));
                 return;
             }
 
-            if (user != null) {
-                console.log("Dati ricevuti:", moviesData.results);
-                const partyRef = await createParty(moviesData.results, user.email, partyName);
-                setPartyId(partyRef.id);
-                setShowDecider(true);
-            }
-
-        } catch (error) {
-            console.log(error);
-            alert("error creating party");
+            const partyRef = await createParty(moviesData.results, user, partyName);
+            onPartyCreated(partyRef.id);
+        } catch (createError) {
+            console.error(createError);
+            setError(t("confirm.createError"));
+        } finally {
+            setLoading(false);
         }
-    }
-
+    };
 
     return (
-        <>
-            {showDecider ? <Decider partyId={partyId}/> : (
-                <div className={"home-page"}>
-                    <div className="form-box">
-                        <label className={"form-label"}>Party Name</label>
-                        <input
-                            type="text"
-                            className={"form-control"}
-                            value={partyName}
-                            disabled
-                        />
-                        <label className={"form-label"}>Genre</label>
-                        <input
-                            type={"text"}
-                            className={"form-control"}
-                            value={genre}
-                            disabled
-                        />
-                        <label className={"form-label"}>Year</label>
-                        <input
-                            type={"text"}
-                            className={"form-control"}
-                            value={year}
-                            disabled
-                        />
-                        <div className={"button-container justify-content-center mt-2"}>
-                            <button type="button" className="btn btn-danger" onClick={() => setChoose("")}>Cancel
-                            </button>
-                            <button type="button" className="btn btn-success" onClick={confirmHandler}>Confirm</button>
-                        </div>
-                    </div>
+        <div className="home-page background-image">
+            <div className="form-box">
+                <h2 className="mb-3">{t("confirm.title")}</h2>
+
+                <label className="form-label">{t("confirm.partyName")}</label>
+                <input type="text" className="form-control" value={partyName} disabled/>
+
+                <label className="form-label mt-3">{t("confirm.genre")}</label>
+                <input type="text" className="form-control" value={translateGenres(genre, t)} disabled/>
+
+                <label className="form-label mt-3">{t("confirm.year")}</label>
+                <input type="text" className="form-control" value={year} disabled/>
+
+                {error && <p className="form-error mt-3">{error}</p>}
+
+                <div className="button-container justify-content-center mt-3">
+                    <button type="button" className="btn btn-danger" onClick={onCancel} disabled={loading}>
+                        {t("common.cancel")}
+                    </button>
+                    <button type="button" className="btn btn-success" onClick={confirmHandler} disabled={loading}>
+                        {loading ? t("common.loading") : t("confirm.create")}
+                    </button>
                 </div>
-            )}
-        </>
-    )
+            </div>
+        </div>
+    );
 }

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450" role="img" aria-label="Poster non disponibile">
+  <rect width="300" height="450" fill="#1b1b2f"/>
+  <rect x="18" y="18" width="264" height="414" rx="18" fill="none" stroke="#3a3a5c" stroke-width="2"/>
+  <circle cx="150" cy="190" r="58" fill="#ff4d5a"/>
+  <path d="M136 160 L136 220 L186 190 Z" fill="#ffffff"/>
+  <text x="150" y="300" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#f8f9fa">Movie Matcher</text>
+  <text x="150" y="330" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#adb5bd">Poster non disponibile</text>
+</svg>

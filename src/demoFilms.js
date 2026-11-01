@@ -1,0 +1,86 @@
+const poster = (path) => `https://image.tmdb.org/t/p/w300${path}`;
+
+export const DEMO_FILMS = [
+    {
+        id: 157336,
+        title: "Interstellar",
+        description: "Un gruppo di esploratori attraversa un wormhole per trovare una nuova casa per l'umanità.",
+        image: poster("/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg"),
+        rating: 8.4,
+        releaseDate: "2014-11-05",
+    },
+    {
+        id: 27205,
+        title: "Inception",
+        description: "Un ladro che ruba segreti dai sogni riceve l'incarico di impiantarne uno nella mente di un uomo.",
+        image: poster("/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg"),
+        rating: 8.4,
+        releaseDate: "2010-07-15",
+    },
+    {
+        id: 603,
+        title: "The Matrix",
+        description: "Un hacker scopre che il mondo in cui vive è una simulazione creata da macchine.",
+        image: poster("/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg"),
+        rating: 8.2,
+        releaseDate: "1999-03-30",
+    },
+    {
+        id: 680,
+        title: "Pulp Fiction",
+        description: "Le storie intrecciate di gangster, boxeur e rapinatori nella Los Angeles degli anni '90.",
+        image: poster("/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg"),
+        rating: 8.5,
+        releaseDate: "1994-09-10",
+    },
+    {
+        id: 120467,
+        title: "The Grand Budapest Hotel",
+        description: "Le avventure di un leggendario concierge e del suo giovane apprendista in un hotel europeo.",
+        image: poster("/eWdyYQreja6JGCzqHWXpWHDrrPo.jpg"),
+        rating: 8.1,
+        releaseDate: "2014-02-26",
+    },
+    {
+        id: 496243,
+        title: "Parasite",
+        description: "Una famiglia povera si infiltra nella vita di una famiglia benestante con conseguenze inattese.",
+        image: poster("/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg"),
+        rating: 8.5,
+        releaseDate: "2019-05-30",
+    },
+    {
+        id: 129,
+        title: "Spirited Away",
+        description: "Una bambina entra in un mondo di spiriti e deve trovare il modo di salvare i suoi genitori.",
+        image: poster("/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg"),
+        rating: 8.5,
+        releaseDate: "2001-07-20",
+    },
+    {
+        id: 76341,
+        title: "Mad Max: Fury Road",
+        description: "In un deserto post-apocalittico, Max e Furiosa fuggono da un tiranno e dalla sua armata.",
+        image: poster("/hA2ple9q4qnwxp3hKVNhroipsir.jpg"),
+        rating: 7.6,
+        releaseDate: "2015-05-13",
+    },
+    {
+        id: 313369,
+        title: "La La Land",
+        description: "Un pianista e un'attrice inseguono i propri sogni tra amore e musica a Los Angeles.",
+        image: poster("/uDO8zWDhfWwoFdKS4fzkUJt0Rf0.jpg"),
+        rating: 7.9,
+        releaseDate: "2016-11-29",
+    },
+    {
+        id: 155,
+        title: "The Dark Knight",
+        description: "Batman affronta il Joker, un criminale che semina il caos a Gotham City.",
+        image: poster("/qJ2tW6WMUDux911r6m7haRef0WH.jpg"),
+        rating: 8.5,
+        releaseDate: "2008-07-16",
+    },
+];
+
+export const DEMO_UPCOMING = DEMO_FILMS.slice(0, 6);

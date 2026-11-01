@@ -1,0 +1,59 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(party) {
+      return isSignedIn() && party.ownerId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /watchParty/{partyId} {
+      allow read: if isSignedIn();
+
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.status == 'open'
+        && request.resource.data.memberCount == 1
+        && request.resource.data.memberIds == [request.auth.uid]
+        && request.resource.data.maxMembers >= 2
+        && request.resource.data.maxMembers <= 8;
+
+      allow update: if isOwner(resource.data)
+        || (isSignedIn()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberCount', 'memberIds'])
+          && request.resource.data.memberCount == resource.data.memberCount + 1
+          && request.resource.data.memberCount <= resource.data.maxMembers
+          && request.resource.data.memberIds.hasAll(resource.data.memberIds)
+          && request.resource.data.memberIds.hasAll([request.auth.uid])
+          && request.resource.data.memberIds.size() == resource.data.memberIds.size() + 1);
+
+      allow delete: if isOwner(resource.data);
+
+      match /members/{memberId} {
+        allow read: if isSignedIn();
+
+        allow create: if isSignedIn()
+          && memberId == request.auth.uid
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.isFinished == false
+          && request.resource.data.preferredFilms.size() == 0;
+
+        allow update: if isSignedIn()
+          && memberId == request.auth.uid
+          && request.resource.data.uid == resource.data.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['preferredFilms', 'isFinished', 'finishedAt']);
+
+        allow delete: if isSignedIn()
+          && (memberId == request.auth.uid
+            || isOwner(get(/databases/$(database)/documents/watchParty/$(partyId)).data));
+      }
+    }
+  }
+}

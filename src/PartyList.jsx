@@ -1,73 +1,143 @@
 import {useEffect, useState} from "react";
-import {addMember, checkUser, getParties} from "./partyHandler.js";
-import {getAuth} from "firebase/auth";
+import {deleteParty, isPartyMember, joinParty, subscribeToParties} from "./partyHandler.js";
+import {useI18n} from "./i18n/context.js";
 
-export function PartyList({onJoin}) {
+function partySize(party) {
+    return party.memberCount ?? party.members?.length ?? 0;
+}
+
+function maxSize(party) {
+    return party.maxMembers ?? party.maxMember ?? 4;
+}
+
+export function PartyList({user, onJoin}) {
+    const {t} = useI18n();
     const [parties, setParties] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    const auth = getAuth();
-    const user = auth.currentUser;
+    const [actionError, setActionError] = useState("");
+    const [joiningId, setJoiningId] = useState(null);
 
     useEffect(() => {
-        async function fetchParties() {
-            try {
-                const querySnapshot = await getParties();
-                const partyList = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-                setParties(partyList);
-            } catch (error) {
-                console.error("Errore nel recupero dei party:", error);
-            } finally {
+        const unsubscribe = subscribeToParties(
+            (data) => {
+                setParties(data);
                 setLoading(false);
-            }
+            },
+            (error) => {
+                console.error("Errore nel recupero dei party:", error);
+                setActionError(t("errors.generic"));
+                setLoading(false);
+            },
+        );
+
+        return unsubscribe;
+    }, [t]);
+
+    const handleJoin = async (party) => {
+        if (isPartyMember(party, user)) {
+            onJoin(party.id);
+            return;
         }
 
-        fetchParties().catch((error) => {
-            console.error("Errore nel recupero dei party:", error);
-        });
-    }, [user]);
+        setActionError("");
+        setJoiningId(party.id);
+        try {
+            await joinParty(party.id, user);
+            onJoin(party.id);
+        } catch (error) {
+            console.error(error);
+            if (error.code === "full") {
+                setActionError(t("errors.full"));
+            } else if (error.code === "closed") {
+                setActionError(t("errors.closed"));
+            } else {
+                setActionError(t("party.joinError"));
+            }
+        } finally {
+            setJoiningId(null);
+        }
+    };
 
-    if (!user) {
-        console.log("No user found");
-        return;
-    }
+    const handleDelete = async (party) => {
+        if (!window.confirm(t("party.deleteConfirm"))) {
+            return;
+        }
+
+        setActionError("");
+        try {
+            await deleteParty(party.id, user);
+        } catch (error) {
+            console.error(error);
+            setActionError(t("party.deleteError"));
+        }
+    };
 
     if (loading) {
-        return <p>Caricamento party...</p>;
+        return <p className="empty-state">{t("party.loading")}</p>;
     }
 
     if (parties.length === 0) {
-        return <p>Nessun party disponibile</p>;
+        return <p className="empty-state">{t("party.empty")}</p>;
     }
 
     return (
         <div>
-            <ul className={"party-container"}>
-                {parties.map((party) => (
-                    <li key={party.id} className="mb-2 d-flex justify-content-between">
-                        <span className="font-semibold">{`Party ${party.partyName}`}</span>
-                        <div className={"d-flex gap-3"}>
-                            <span>{party.members.length}/4</span>
-                            <button
-                                className="btn btn-primary"
-                                onClick={async () => {
-                                    try {
-                                        await addMember(party.id, user.email);
-                                        onJoin(party.id);
-                                    } catch (e) {
-                                        console.error(e);
-                                    }
-                                }}
-                                disabled={party.members.length === 4 && checkUser(party.id, user.email)}
-                            >
-                                Join
-                            </button>
-                        </div>
-                    </li>
-                ))}
+            {actionError && <p className="form-error">{actionError}</p>}
+
+            <ul className="party-list">
+                {parties.map((party) => {
+                    const member = isPartyMember(party, user);
+                    const owner = party.ownerId === user.uid || party.ownerEmail === user.email;
+                    const closed = party.status === "closed";
+                    const full = partySize(party) >= maxSize(party);
+                    const openLabel = member
+                        ? t("party.open")
+                        : closed
+                            ? t("party.closed")
+                            : full
+                                ? t("party.full")
+                                : t("party.join");
+
+                    return (
+                        <li key={party.id} className="party-item">
+                            <div className="party-item-main">
+                                <strong>{party.partyName}</strong>
+                                <span className="party-meta">
+                                    {t("party.host")}: {party.ownerEmail ?? party.partyOwnerEmail ?? "—"}
+                                    {" · "}
+                                    {t("party.members", {
+                                        count: partySize(party),
+                                        max: maxSize(party),
+                                    })}
+                                </span>
+                                {closed && <span className="badge bg-dark">{t("party.closed")}</span>}
+                            </div>
+
+                            <div className="party-item-actions">
+                                {member && !closed && (
+                                    <span className="badge bg-secondary">{t("party.joined")}</span>
+                                )}
+                                <button
+                                    type="button"
+                                    className={`btn btn-sm ${member ? "btn-primary" : "btn-success"}`}
+                                    onClick={() => handleJoin(party)}
+                                    disabled={joiningId === party.id || (!member && (closed || full))}
+                                >
+                                    {joiningId === party.id ? t("common.loading") : openLabel}
+                                </button>
+                                {owner && (
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-danger"
+                                        onClick={() => handleDelete(party)}
+                                    >
+                                        {t("common.delete")}
+                                    </button>
+                                )}
+                            </div>
+                        </li>
+                    );
+                })}
             </ul>
         </div>
     );

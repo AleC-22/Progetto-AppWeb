@@ -1,15 +1,10 @@
-import {auth, provider, signInWithPopup} from "./Firebase.js";
+import {signInWithPopup} from "firebase/auth";
+import {auth, provider} from "./Firebase.js";
 
-export const AuthGoogle = async (setUser) => {
-    try {
-        await signInWithPopup(auth, provider)
-            .then((result) => {
-                const user = result.user;
-                setUser(user);
-            }).catch(error => {
-                console.log(error)
-            });
-    } catch (error) {
-        console.error(error)
+export const AuthGoogle = async () => {
+    if (!auth || !provider) {
+        throw new Error("Firebase is not configured");
     }
-}
+    const result = await signInWithPopup(auth, provider);
+    return result.user;
+};

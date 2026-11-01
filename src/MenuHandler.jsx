@@ -1,81 +1,67 @@
-import {getAuth, signOut} from "firebase/auth";
-import {useEffect, useState} from "react";
-import {Home} from "./Home.jsx";
+import {signOut} from "firebase/auth";
+import {useState} from "react";
+import {auth} from "./Firebase.js";
 import {News} from "./News.jsx";
 import {Profile} from "./Profile.jsx";
-import {getFavoriteGenre} from "./SetterAndGetter.js";
-import {Fallback} from "./Fallback.jsx";
 import {WatchParty} from "./WatchParty.jsx";
+import {LanguageSwitcher} from "./LanguageSwitcher.jsx";
+import {Credits} from "./Credits.jsx";
+import {useI18n} from "./i18n/context.js";
 
-
-export function MenuHandler({setUser}) {
-    const auth = getAuth();
+export function MenuHandler({user, setUser}) {
+    const {t} = useI18n();
     const [page, setPage] = useState("WatchParty");
-    const [loading, setLoading] = useState(true);
-
-    const userId = getAuth().currentUser.uid;
-
-    useEffect(() => {
-        if (userId) {
-            console.log("genere preferito di:", userId);
-            getFavoriteGenre(userId).then((genre) => {
-                setFavoriteGenre(genre);
-                setLoading(false);
-            }).catch(error => {
-                console.log("errore nel recuperare il genere: ", error);
-                setLoading(false);
-            })
-        }
-    }, [userId])
 
     const signOutHandler = async () => {
-        await signOut(auth)
-            .then(() => {
-                setUser(null);
-                console.log("Utente disconnesso con successo!")
-            }).catch(error => {
-                console.log(error)
-            });
+        try {
+            await signOut(auth);
+            setUser(null);
+        } catch (error) {
+            console.log(error);
+        }
     };
 
-    if (loading) {
-        return <Fallback/>;
-    }
+    const navItems = [
+        {id: "WatchParty", label: t("nav.home")},
+        {id: "News", label: t("nav.news")},
+        {id: "Profile", label: t("nav.profile")},
+    ];
 
     return (
-        <>
-            <div className={"background-home"}>
-                <ul>
-                    <li>
-                        <a className={page === "Home" ? "active" : ""} href="#"
-                           onClick={() => setPage("WatchParty")}>
-                            Home
-                        </a>
-                    </li>
-                    <li>
-                        <a className={page === "News" ? "active" : ""} href="#"
-                           onClick={() => setPage("News")}>
-                            News
-                        </a>
-                    </li>
-                    <li>
-                        <a className={page === "Profile" ? "active" : ""} href="#"
-                           onClick={() => setPage("Profile")}>
-                            Profile
-                        </a>
-                    </li>
-                    <li>
-                        <a href={"#"} onClick={(signOutHandler)}>
-                            Logout
-                        </a>
-                    </li>
-                </ul>
-                <div>
-                    {page === "WatchParty" && <WatchParty/>}
-                    {page === "News" && <News/>}
-                    {page === "Profile" && <Profile setUser={setUser}/>}
+        <div className="background-home">
+            <nav className="app-nav">
+                <div className="app-nav-links">
+                    <span className="app-brand">🎬 {t("appName")}</span>
+                    {navItems.map((item) => (
+                        <button
+                            key={item.id}
+                            type="button"
+                            className={page === item.id ? "active" : ""}
+                            onClick={() => setPage(item.id)}
+                            aria-current={page === item.id ? "page" : undefined}
+                        >
+                            {item.label}
+                        </button>
+                    ))}
                 </div>
-            </div>
-        </>
-    )
+
+                <div className="app-nav-actions">
+                    <LanguageSwitcher/>
+                    <button type="button" className="nav-logout" onClick={signOutHandler}>
+                        {t("nav.logout")}
+                    </button>
+                </div>
+            </nav>
+
+            <main className="app-main">
+                {page === "WatchParty" && <WatchParty user={user}/>}
+                {page === "News" && <News/>}
+                {page === "Profile" && <Profile user={user} setUser={setUser}/>}
+            </main>
+
+            <footer className="app-footer" aria-label={t("credits.title")}>
+                <Credits compact/>
+            </footer>
+        </div>
+    );
 }

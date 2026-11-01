@@ -1,6 +1,6 @@
 import {initializeApp} from "firebase/app";
-import {getAuth, GoogleAuthProvider, signInWithPopup} from "firebase/auth";
-import {getFirestore} from "firebase/firestore";
+import {connectAuthEmulator, getAuth, GoogleAuthProvider} from "firebase/auth";
+import {connectFirestoreEmulator, getFirestore} from "firebase/firestore";
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_Firebase_apiKey,
@@ -12,8 +12,29 @@ const firebaseConfig = {
     measurementId: import.meta.env.VITE_Firebase_measurementId,
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const provider = new GoogleAuthProvider();
-const db = getFirestore(app);
-export {signInWithPopup, db};
+export const isFirebaseConfigured = Boolean(
+    firebaseConfig.apiKey
+    && firebaseConfig.authDomain
+    && firebaseConfig.projectId
+    && firebaseConfig.appId
+);
+
+let app = null;
+let auth = null;
+let db = null;
+let provider = null;
+
+if (isFirebaseConfigured) {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    provider = new GoogleAuthProvider();
+
+    if (import.meta.env.VITE_USE_FIREBASE_EMULATORS === "true" && !globalThis.__movieMatcherEmulatorsConnected) {
+        connectAuthEmulator(auth, "http://127.0.0.1:9099", {disableWarnings: true});
+        connectFirestoreEmulator(db, "127.0.0.1", 8080);
+        globalThis.__movieMatcherEmulatorsConnected = true;
+    }
+}
+
+export {app, auth, db, provider};
