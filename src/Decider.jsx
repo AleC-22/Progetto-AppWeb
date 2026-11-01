@@ -238,19 +238,21 @@ export function Decider({partyId, user, onExit}) {
                         <div className="progress-bar bg-success" style={{width: `${progress}%`}}/>
                     </div>
 
-                    {allFinished
-                        ? isOwner
-                            ? <button type="button" className="btn btn-danger" onClick={handleClose} disabled={closing}>
-                                {closing ? t("common.loading") : t("decider.close")}
-                            </button>
-                            : <p className="text-muted">{t("decider.waitingOwner")}</p>
-                        : <p className="text-muted">{t("decider.endText")}</p>}
+                    {!allFinished && <p className="text-muted">{t("decider.endText")}</p>}
 
                     {error && <p className="form-error mt-3">{error}</p>}
 
-                    <button type="button" className="btn btn-outline-secondary mt-3" onClick={onExit}>
-                        {t("decider.backToParties")}
-                    </button>
+                    <div className="form-actions">
+                        {allFinished && (isOwner
+                            ? <button type="button" className="btn btn-danger" onClick={handleClose} disabled={closing}>
+                                {closing ? t("common.loading") : t("decider.close")}
+                            </button>
+                            : <p className="text-muted mb-0">{t("decider.waitingOwner")}</p>)}
+
+                        <button type="button" className="btn btn-outline-secondary" onClick={onExit}>
+                            {t("decider.backToParties")}
+                        </button>
+                    </div>
                 </div>
             </div>
         );

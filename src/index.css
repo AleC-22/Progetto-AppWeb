@@ -200,6 +200,15 @@ body {
     justify-content: center;
 }
 
+.form-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+
 .button-container {
     display: flex;
     gap: 0.75rem;
