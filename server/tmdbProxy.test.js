@@ -31,6 +31,18 @@ describe("parseProxyUrl", () => {
         expect(params.has("foo")).toBe(false);
     });
 
+    it("accepts the Italian-language and Italian-release filters", () => {
+        const {params} = parseProxyUrl(
+            "/api/tmdb/discover/movie?with_original_language=it&with_release_type=2|3|4"
+            + "&release_date.gte=1900-01-01&release_date.lte=2031-12-31",
+        );
+
+        expect(params.get("with_original_language")).toBe("it");
+        expect(params.get("with_release_type")).toBe("2|3|4");
+        expect(params.get("release_date.gte")).toBe("1900-01-01");
+        expect(params.get("release_date.lte")).toBe("2031-12-31");
+    });
+
     it("rejects endpoints outside the whitelist", () => {
         expect(() => parseProxyUrl("/api/tmdb/account")).toThrow(TmdbProxyError);
         expect(() => parseProxyUrl("/api/tmdb/account")).toThrow("unsupported-endpoint");
@@ -43,6 +55,15 @@ describe("parseProxyUrl", () => {
 
     it("rejects a malformed encoded path", () => {
         expect(() => parseProxyUrl("/api/tmdb/movie/%E0%A4%A/upcoming")).toThrow("invalid-path");
+    });
+
+    it("rejects invalid language and release filters", () => {
+        expect(() => parseProxyUrl("/api/tmdb/discover/movie?with_original_language=italian"))
+            .toThrow("invalid-original-language");
+        expect(() => parseProxyUrl("/api/tmdb/discover/movie?with_release_type=9"))
+            .toThrow("invalid-release-type");
+        expect(() => parseProxyUrl("/api/tmdb/discover/movie?release_date.gte=1900-1-1"))
+            .toThrow("invalid-release-date");
     });
 });
 

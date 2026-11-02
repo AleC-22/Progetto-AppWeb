@@ -17,8 +17,14 @@ const ALLOWED_PARAMS = new Set([
     "sort_by",
     "vote_count.gte",
     "with_genres",
+    "with_original_language",
+    "with_release_type",
+    "release_date.gte",
+    "release_date.lte",
     "primary_release_date.gte",
 ]);
+
+const DATE_PARAMS = ["release_date.gte", "release_date.lte"];
 
 export class TmdbProxyError extends Error {
     constructor(status, code) {
@@ -78,6 +84,23 @@ export function parseProxyUrl(rawUrl) {
     const region = params.get("region");
     if (region !== null && !/^[A-Z]{2}$/.test(region)) {
         throw new TmdbProxyError(400, "invalid-region");
+    }
+
+    const originalLanguage = params.get("with_original_language");
+    if (originalLanguage !== null && !/^[a-z]{2}$/.test(originalLanguage)) {
+        throw new TmdbProxyError(400, "invalid-original-language");
+    }
+
+    const releaseType = params.get("with_release_type");
+    if (releaseType !== null && !/^[1-6](\|[1-6])*$/.test(releaseType)) {
+        throw new TmdbProxyError(400, "invalid-release-type");
+    }
+
+    for (const name of DATE_PARAMS) {
+        const value = params.get(name);
+        if (value !== null && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+            throw new TmdbProxyError(400, "invalid-release-date");
+        }
     }
 
     return {endpoint, params};

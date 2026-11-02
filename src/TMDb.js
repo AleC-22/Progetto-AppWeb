@@ -8,6 +8,11 @@ const BASE_URL = "/api/tmdb";
 const REQUEST_TIMEOUT = 15000;
 const POSTER_PLACEHOLDER = "/poster-placeholder.svg";
 
+// "italian-release" is a best-effort proxy for Italian audio/subtitles:
+// TMDb has no subtitle track data, but a release in Italy usually means
+// an Italian dubbed or subtitled edition exists.
+export const LANGUAGE_FILTERS = ["any", "italian-release", "italian"];
+
 export function getImageUrl(path, size = "w300") {
     if (!path) {
         return POSTER_PLACEHOLDER;
@@ -72,15 +77,16 @@ async function requestMovieList(endpoint, params, demoResults, errorLabel) {
     }
 }
 
-export const getMovies = async (genre, year, page = 1, language = "it-IT") => {
+export function buildDiscoverParams(genre, year, language = "it-IT", languageFilter = "any") {
     const genreIDs = getGenreIDs(genre);
+    const italianEdition = languageFilter === "italian-release";
     const params = {
         language,
-        page,
+        page: 1,
         include_adult: false,
         sort_by: "popularity.desc",
         "vote_count.gte": 20,
-        region: language === "it-IT" ? "IT" : "US",
+        region: italianEdition || language === "it-IT" ? "IT" : "US",
     };
 
     if (genreIDs.length > 0) {
@@ -89,6 +95,21 @@ export const getMovies = async (genre, year, page = 1, language = "it-IT") => {
     if (year) {
         params["primary_release_date.gte"] = `${year}-01-01`;
     }
+    if (languageFilter === "italian") {
+        params.with_original_language = "it";
+    }
+    if (italianEdition) {
+        params.with_release_type = "2|3|4";
+        params["release_date.gte"] = "1900-01-01";
+        params["release_date.lte"] = `${new Date().getFullYear() + 5}-12-31`;
+    }
+
+    return params;
+}
+
+export const getMovies = async (genre, year, page = 1, language = "it-IT", languageFilter = "any") => {
+    const params = buildDiscoverParams(genre, year, language, languageFilter);
+    params.page = page;
 
     return requestMovieList("discover/movie", params, DEMO_FILMS, "Errore nel recupero film: ");
 };

@@ -8,6 +8,7 @@ Interfaccia bilingue **Italiano / English**, installabile come PWA.
 
 - Registrazione e login con email/password o Google (Firebase Auth)
 - Creazione di una Watch Party con nome, genere e anno di uscita
+- Filtro lingua alla creazione: edizione italiana, solo film italiani o tutte le lingue
 - Fino a 4 membri per party, con controllo della capienza lato server
 - Voto dei film con like/dislike e barra di avanzamento condivisa
 - Aggiornamenti in tempo reale tramite Firestore (`onSnapshot`)
@@ -111,6 +112,20 @@ TMDb API con TMDB_API_KEY
 - Le risposte vengono messe in cache per 5 minuti (`s-maxage=300`).
 
 Senza chiave TMDb l'app resta avviabile, ma la creazione dei party e la sezione "Prossime uscite" mostrano un messaggio di configurazione mancante.
+
+### Filtro lingua e sottotitoli
+
+Alla creazione del party si può scegliere:
+
+| Opzione | Comportamento |
+| --- | --- |
+| **Edizione italiana** (predefinita) | Richiede un'uscita italiana del film (`with_release_type`, `release_date`, `region=IT`) |
+| **Solo film italiani** | Filtra per lingua originale italiana (`with_original_language=it`) |
+| **Tutte le lingue** | Nessun filtro lingua |
+
+TMDb **non espone le tracce audio o sottotitoli** disponibili per un film. Per questo “Edizione italiana” usa l'uscita italiana come indicazione: di solito implica doppiaggio o sottotitoli italiani, ma non è una garanzia. L'interfaccia lo specifica accanto al selettore.
+
+La scelta viene ricordata nel browser tramite `localStorage` (`movie-matcher.language-filter`).
 
 ### Deploy su Vercel
 
@@ -238,6 +253,7 @@ I test coprono:
 - duplicati dello stesso film;
 - compatibilità con party creati prima dell'introduzione degli ID TMDb;
 - URL delle locandine TMDb;
+- costruzione dei filtri lingua e edizione italiana;
 - whitelist, autenticazione e gestione errori del proxy TMDb.
 
 ## Roadmap
