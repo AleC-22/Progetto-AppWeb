@@ -1,4 +1,3 @@
-import axios from "axios";
 import {getGenreIDs} from "./genres.js";
 import {DEMO_FILMS, DEMO_UPCOMING} from "./demoFilms.js";
 
@@ -54,26 +53,55 @@ function emptyResult(error) {
     };
 }
 
+async function readJson(response) {
+    try {
+        return await response.json();
+    } catch {
+        return null;
+    }
+}
+
 async function requestMovieList(endpoint, params, demoResults, errorLabel) {
     if (USE_DEMO_MOVIES) {
         return {results: demoResults, actualPage: 1, totalPages: 1};
     }
 
+    const search = new URLSearchParams();
+    for (const [name, value] of Object.entries(params)) {
+        if (value !== undefined && value !== null && value !== "") {
+            search.set(name, String(value));
+        }
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
     try {
-        const response = await axios.get(`${BASE_URL}/${endpoint}`, {
-            params,
-            timeout: REQUEST_TIMEOUT,
+        const response = await fetch(`${BASE_URL}/${endpoint}?${search}`, {
+            headers: {accept: "application/json"},
+            signal: controller.signal,
         });
+        const data = await readJson(response);
+
+        if (!response.ok) {
+            console.error(errorLabel, response.status, data?.error);
+            return emptyResult(data?.error === "missing-key" ? "missing-key" : "request-failed");
+        }
+        if (!data || !Array.isArray(data.results)) {
+            console.error(errorLabel, "invalid response");
+            return emptyResult("request-failed");
+        }
 
         return {
-            results: response.data.results.map(transformFilm),
-            actualPage: response.data.page,
-            totalPages: Math.min(response.data.total_pages || 1, 500),
+            results: data.results.map(transformFilm),
+            actualPage: data.page ?? 1,
+            totalPages: Math.min(data.total_pages || 1, 500),
         };
     } catch (error) {
         console.error(errorLabel, error);
-        const code = error?.response?.data?.error;
-        return emptyResult(code === "missing-key" ? "missing-key" : "request-failed");
+        return emptyResult("request-failed");
+    } finally {
+        clearTimeout(timeout);
     }
 }
 

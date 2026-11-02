@@ -1,5 +1,12 @@
-import {describe, expect, it} from "vitest";
-import {buildDiscoverParams, getImageUrl, getTmdbImageUrl, LANGUAGE_FILTERS} from "./TMDb.js";
+import {afterEach, describe, expect, it, vi} from "vitest";
+import {
+    buildDiscoverParams,
+    getImageUrl,
+    getMovies,
+    getTmdbImageUrl,
+    getUpcomingMovies,
+    LANGUAGE_FILTERS,
+} from "./TMDb.js";
 
 describe("getTmdbImageUrl", () => {
     it("builds a TMDb URL from a poster path that starts with a slash", () => {
@@ -71,5 +78,109 @@ describe("buildDiscoverParams", () => {
         expect(params.with_genres).toBe("27,53");
         expect(params["primary_release_date.gte"]).toBe("2010-01-01");
         expect(params.region).toBe("IT");
+    });
+});
+
+describe("TMDb requests", () => {
+    const originalFetch = globalThis.fetch;
+
+    afterEach(() => {
+        globalThis.fetch = originalFetch;
+        vi.restoreAllMocks();
+    });
+
+    it("calls the proxy and maps a successful response", async () => {
+        const fetchMock = vi.fn(async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+                page: 2,
+                total_pages: 900,
+                results: [{
+                    id: 42,
+                    title: "Film",
+                    overview: "Trama",
+                    poster_path: "/poster.jpg",
+                    vote_average: 7.5,
+                    release_date: "2020-01-01",
+                }],
+            }),
+        }));
+        globalThis.fetch = fetchMock;
+
+        const result = await getMovies("Drama", 2020, 2, "it-IT", "italian");
+
+        expect(result.error).toBeUndefined();
+        expect(result.actualPage).toBe(2);
+        expect(result.totalPages).toBe(500);
+        expect(result.results).toEqual([{
+            id: 42,
+            title: "Film",
+            description: "Trama",
+            image: "https://image.tmdb.org/t/p/w300/poster.jpg",
+            rating: 7.5,
+            releaseDate: "2020-01-01",
+        }]);
+
+        const [url, options] = fetchMock.mock.calls[0];
+        expect(url).toContain("/api/tmdb/discover/movie?");
+        expect(url).toContain("page=2");
+        expect(url).toContain("with_original_language=it");
+        expect(options.signal).toBeInstanceOf(AbortSignal);
+    });
+
+    it("forwards the missing-key error from the proxy", async () => {
+        globalThis.fetch = vi.fn(async () => ({
+            ok: false,
+            status: 500,
+            json: async () => ({error: "missing-key"}),
+        }));
+        vi.spyOn(console, "error").mockImplementation(() => {});
+
+        const result = await getMovies("Drama", 2020);
+
+        expect(result.error).toBe("missing-key");
+        expect(result.results).toEqual([]);
+    });
+
+    it("maps network failures to a generic request error", async () => {
+        globalThis.fetch = vi.fn(async () => {
+            throw new TypeError("network down");
+        });
+        vi.spyOn(console, "error").mockImplementation(() => {});
+
+        const result = await getUpcomingMovies();
+
+        expect(result.error).toBe("request-failed");
+        expect(result.results).toEqual([]);
+    });
+
+    it("rejects a success response without a results list", async () => {
+        globalThis.fetch = vi.fn(async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({page: 1}),
+        }));
+        vi.spyOn(console, "error").mockImplementation(() => {});
+
+        const result = await getMovies("Drama", 2020);
+
+        expect(result.error).toBe("request-failed");
+        expect(result.results).toEqual([]);
+    });
+
+    it("handles a body that is not valid JSON", async () => {
+        globalThis.fetch = vi.fn(async () => ({
+            ok: true,
+            status: 200,
+            json: async () => {
+                throw new SyntaxError("invalid json");
+            },
+        }));
+        vi.spyOn(console, "error").mockImplementation(() => {});
+
+        const result = await getUpcomingMovies();
+
+        expect(result.error).toBe("request-failed");
     });
 });

@@ -10,6 +10,7 @@ Interfaccia bilingue **Italiano / English**, installabile come PWA.
 - Creazione di una Watch Party con nome, genere e anno di uscita
 - Filtro lingua alla creazione: edizione italiana, solo film italiani o tutte le lingue
 - Fino a 4 membri per party, con controllo della capienza lato server
+- Lobby limitata ai 50 party più recenti, con pulizia manuale dei party chiusi da oltre 30 giorni
 - Voto dei film con like/dislike e barra di avanzamento condivisa
 - Aggiornamenti in tempo reale tramite Firestore (`onSnapshot`)
 - Calcolo del film più votato, gestione dei pareggi e salvataggio del risultato
@@ -24,7 +25,7 @@ Interfaccia bilingue **Italiano / English**, installabile come PWA.
 - **Firebase 11**: Authentication + Cloud Firestore
 - **TMDb API** per film e prossime uscite, tramite proxy server-side
 - **Bootstrap 5** + CSS personalizzato
-- **Vitest** per i test di matching e proxy
+- **Vitest** per i test di matching, proxy e utility
 - **vite-plugin-pwa** per la PWA
 - **Vercel Functions** (opzionale) per il proxy TMDb in produzione
 
@@ -89,7 +90,20 @@ Le regole in [`firestore.rules`](./firestore.rules) consentono:
 - ai membri autenticati di leggere i party;
 - al creatore di creare/chiudere/eliminare il party;
 - a ogni membro di scrivere solo le proprie preferenze;
-- l'ingresso nel party solo incrementando il contatore e senza superare `maxMembers`.
+- l'ingresso nel party solo incrementando il contatore e senza superare `maxMembers`;
+- limiti espliciti sui dati: nome del party ≤ 60 caratteri, massimo 20 film per party e 20 preferenze per membro.
+
+## Lobby, limiti e pulizia
+
+Per mantenere letture Firestore prevedibili, la lobby ascolta solo i **50 party più recenti** (`orderBy("createdAt", "desc")` + `limit(50)`). Non serve un indice composito: Firestore crea automaticamente l'indice sul singolo campo `createdAt`.
+
+I party chiusi restano consultabili per un po'. Ogni proprietario può eliminare i propri party chiusi da **più di 30 giorni** con il pulsante **“Elimina party chiusi vecchi”** nella lobby. La pulizia:
+
+- è manuale e riguarda solo i party di cui l'utente è proprietario;
+- elimina in batch anche i documenti della sotto-collezione `members`;
+- non richiede Cloud Functions, Admin SDK o piani a pagamento.
+
+Questa scelta evita il TTL di Firestore (che richiede il piano Blaze) e mantiene il progetto compatibile con il piano gratuito Spark.
 
 ## TMDb
 
@@ -134,7 +148,7 @@ La scelta viene ricordata nel browser tramite `localStorage` (`movie-matcher.lan
 4. Le variabili `VITE_Firebase_*` restano necessarie per il client e vanno aggiunte allo stesso modo.
 5. Dopo il deploy aggiungi il dominio Vercel tra i domini autorizzati di Firebase Authentication.
 
-Non serve un `vercel.json` finché l'app resta su una singola pagina senza routing client-side. Se in futuro aggiungi route come `/party/:id`, servirà un rewrite SPA verso `/index.html`.
+Il file [`vercel.json`](./vercel.json) applica header di sicurezza di base (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`) a tutte le risposte. Non contiene rewrite: l'app non usa routing client-side. Se in futuro aggiungi route come `/party/:id`, servirà un rewrite SPA verso `/index.html`.
 
 > Il piano Vercel Hobby è destinato a progetti personali/non commerciali. Per un uso commerciale serve Vercel Pro, oltre all'accordo TMDb descritto sotto.
 
@@ -210,11 +224,13 @@ src/
 ├── News.jsx                # Prossime uscite TMDb
 ├── Firebase.js             # Init Firebase + emulatori
 ├── partyHandler.js         # Transazioni e subscription Firestore
+├── partyUtils.js           # Utility date/pulizia party (testate)
 ├── matching.js             # Algoritmo di matching (testato)
-├── TMDb.js                 # Client del proxy TMDb + fallback demo
+├── TMDb.js                 # Client fetch del proxy TMDb + fallback demo
 ├── genres.js               # Generi condivisi
 ├── i18n/                   # Dizionari IT/EN e provider
 └── index.css               # Tema e responsive
+vercel.json                 # Header di sicurezza
 ```
 
 ## Modello dati Firestore
@@ -253,6 +269,8 @@ I test coprono:
 - compatibilità con party creati prima dell'introduzione degli ID TMDb;
 - URL delle locandine TMDb;
 - costruzione dei filtri lingua e edizione italiana;
+- chiamate fetch al proxy TMDb, errori e risposte malformate;
+- utility di pulizia dei party chiusi;
 - whitelist, autenticazione e gestione errori del proxy TMDb.
 
 ## Roadmap
@@ -268,5 +286,7 @@ I test coprono:
 
 - Non committare `.env`, service account o chiavi API.
 - La chiave TMDb vive solo lato server (`TMDB_API_KEY`), mai nel bundle client.
-- Le regole Firestore sono versionate in `firestore.rules`.
+- Le regole Firestore sono versionate in `firestore.rules` e limitano dimensione e forma dei dati scritti.
+- Le richieste TMDb passano da un proxy con whitelist di endpoint e parametri.
+- `vercel.json` aggiunge header di sicurezza di base; valuta una CSP quando il set di risorse esterne sarà stabile.
 - L'account di test presente nelle vecchie versioni del README è stato rimosso: createne uno nuovo o eliminalo dalla console Firebase se non serve più.

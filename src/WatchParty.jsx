@@ -90,6 +90,7 @@ function PartyForm({onCancel, onPartyCreated}) {
                     className="form-control"
                     placeholder={t("party.namePlaceholder")}
                     value={partyName}
+                    maxLength={60}
                     autoFocus
                     onChange={(event) => {
                         setPartyName(event.target.value);

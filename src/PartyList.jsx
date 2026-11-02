@@ -1,5 +1,12 @@
 import {useEffect, useState} from "react";
-import {deleteParty, isPartyMember, joinParty, subscribeToParties} from "./partyHandler.js";
+import {
+    CLEANUP_MAX_AGE_DAYS,
+    cleanupOldClosedParties,
+    deleteParty,
+    isPartyMember,
+    joinParty,
+    subscribeToParties,
+} from "./partyHandler.js";
 import {useI18n} from "./i18n/context.js";
 
 function partySize(party) {
@@ -16,6 +23,8 @@ export function PartyList({user, onJoin}) {
     const [loading, setLoading] = useState(true);
     const [actionError, setActionError] = useState("");
     const [joiningId, setJoiningId] = useState(null);
+    const [cleaning, setCleaning] = useState(false);
+    const [cleanupMessage, setCleanupMessage] = useState("");
 
     useEffect(() => {
         const unsubscribe = subscribeToParties(
@@ -72,73 +81,106 @@ export function PartyList({user, onJoin}) {
         }
     };
 
+    const handleCleanup = async () => {
+        if (!window.confirm(t("party.cleanupConfirm", {days: CLEANUP_MAX_AGE_DAYS}))) {
+            return;
+        }
+
+        setActionError("");
+        setCleanupMessage("");
+        setCleaning(true);
+        try {
+            const count = await cleanupOldClosedParties(user);
+            setCleanupMessage(count > 0
+                ? t("party.cleanupDone", {count})
+                : t("party.cleanupNone", {days: CLEANUP_MAX_AGE_DAYS}));
+        } catch (error) {
+            console.error(error);
+            setActionError(t("party.cleanupError"));
+        } finally {
+            setCleaning(false);
+        }
+    };
+
     if (loading) {
         return <p className="empty-state">{t("party.loading")}</p>;
-    }
-
-    if (parties.length === 0) {
-        return <p className="empty-state">{t("party.empty")}</p>;
     }
 
     return (
         <div>
             {actionError && <p className="form-error">{actionError}</p>}
 
-            <ul className="party-list">
-                {parties.map((party) => {
-                    const member = isPartyMember(party, user);
-                    const owner = party.ownerId === user.uid || party.ownerEmail === user.email;
-                    const closed = party.status === "closed";
-                    const full = partySize(party) >= maxSize(party);
-                    const openLabel = member
-                        ? t("party.open")
-                        : closed
-                            ? t("party.closed")
-                            : full
-                                ? t("party.full")
-                                : t("party.join");
+            {parties.length === 0
+                ? <p className="empty-state">{t("party.empty")}</p>
+                : (
+                    <ul className="party-list">
+                        {parties.map((party) => {
+                            const member = isPartyMember(party, user);
+                            const owner = party.ownerId === user.uid || party.ownerEmail === user.email;
+                            const closed = party.status === "closed";
+                            const full = partySize(party) >= maxSize(party);
+                            const openLabel = member
+                                ? t("party.open")
+                                : closed
+                                    ? t("party.closed")
+                                    : full
+                                        ? t("party.full")
+                                        : t("party.join");
 
-                    return (
-                        <li key={party.id} className="party-item">
-                            <div className="party-item-main">
-                                <strong>{party.partyName}</strong>
-                                <span className="party-meta">
-                                    {t("party.host")}: {party.ownerEmail ?? party.partyOwnerEmail ?? "—"}
-                                    {" · "}
-                                    {t("party.members", {
-                                        count: partySize(party),
-                                        max: maxSize(party),
-                                    })}
-                                </span>
-                                {closed && <span className="badge bg-dark">{t("party.closed")}</span>}
-                            </div>
+                            return (
+                                <li key={party.id} className="party-item">
+                                    <div className="party-item-main">
+                                        <strong>{party.partyName}</strong>
+                                        <span className="party-meta">
+                                            {t("party.host")}: {party.ownerEmail ?? party.partyOwnerEmail ?? "—"}
+                                            {" · "}
+                                            {t("party.members", {
+                                                count: partySize(party),
+                                                max: maxSize(party),
+                                            })}
+                                        </span>
+                                        {closed && <span className="badge bg-dark">{t("party.closed")}</span>}
+                                    </div>
 
-                            <div className="party-item-actions">
-                                {member && !closed && (
-                                    <span className="badge bg-secondary">{t("party.joined")}</span>
-                                )}
-                                <button
-                                    type="button"
-                                    className={`btn btn-sm ${member ? "btn-primary" : "btn-success"}`}
-                                    onClick={() => handleJoin(party)}
-                                    disabled={joiningId === party.id || (!member && (closed || full))}
-                                >
-                                    {joiningId === party.id ? t("common.loading") : openLabel}
-                                </button>
-                                {owner && (
-                                    <button
-                                        type="button"
-                                        className="btn btn-sm btn-outline-danger"
-                                        onClick={() => handleDelete(party)}
-                                    >
-                                        {t("common.delete")}
-                                    </button>
-                                )}
-                            </div>
-                        </li>
-                    );
-                })}
-            </ul>
+                                    <div className="party-item-actions">
+                                        {member && !closed && (
+                                            <span className="badge bg-secondary">{t("party.joined")}</span>
+                                        )}
+                                        <button
+                                            type="button"
+                                            className={`btn btn-sm ${member ? "btn-primary" : "btn-success"}`}
+                                            onClick={() => handleJoin(party)}
+                                            disabled={joiningId === party.id || (!member && (closed || full))}
+                                        >
+                                            {joiningId === party.id ? t("common.loading") : openLabel}
+                                        </button>
+                                        {owner && (
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-outline-danger"
+                                                onClick={() => handleDelete(party)}
+                                            >
+                                                {t("common.delete")}
+                                            </button>
+                                        )}
+                                    </div>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
+
+            <div className="party-cleanup">
+                <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={handleCleanup}
+                    disabled={cleaning}
+                >
+                    {cleaning ? t("common.loading") : t("party.cleanup")}
+                </button>
+                {cleanupMessage && <span className="party-cleanup-message">{cleanupMessage}</span>}
+            </div>
         </div>
     );
 }

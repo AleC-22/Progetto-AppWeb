@@ -3,14 +3,26 @@ import {
     doc,
     getDoc,
     getDocs,
+    limit,
     onSnapshot,
+    orderBy,
+    query,
     runTransaction,
     serverTimestamp,
-    updateDoc,
+    where,
     writeBatch,
 } from "firebase/firestore";
 import {db} from "./Firebase.js";
 import {calculateMatch} from "./matching.js";
+import {isExpiredClosedParty} from "./partyUtils.js";
+
+// The lobby only needs the most recent parties. This bounds the documents
+// downloaded on every visit and keeps realtime reads predictable.
+export const PARTY_LIST_LIMIT = 50;
+
+// Closed parties are kept for a while so members can review results, then
+// the owner can remove them from the lobby.
+export const CLEANUP_MAX_AGE_DAYS = 30;
 
 export class PartyError extends Error {
     constructor(code, message) {
@@ -26,19 +38,6 @@ function memberRef(partyId, userId) {
 
 function membersCollection(partyId) {
     return collection(db, "watchParty", partyId, "members");
-}
-
-function timestampToMillis(value) {
-    if (!value) {
-        return 0;
-    }
-    if (typeof value.toMillis === "function") {
-        return value.toMillis();
-    }
-    if (value instanceof Date) {
-        return value.getTime();
-    }
-    return typeof value === "number" ? value : 0;
 }
 
 export function isPartyMember(party, user) {
@@ -233,6 +232,30 @@ export async function deleteParty(partyId, user) {
     await batch.commit();
 }
 
+export async function cleanupOldClosedParties(
+    user,
+    {now = Date.now(), maxAgeDays = CLEANUP_MAX_AGE_DAYS} = {},
+) {
+    if (!user?.uid) {
+        return 0;
+    }
+
+    const cutoff = now - maxAgeDays * 24 * 60 * 60 * 1000;
+    const ownedParties = await getDocs(query(
+        collection(db, "watchParty"),
+        where("ownerId", "==", user.uid),
+    ));
+    const expired = ownedParties.docs.filter((partyDoc) => (
+        isExpiredClosedParty(partyDoc.data(), cutoff)
+    ));
+
+    for (const partyDoc of expired) {
+        await deleteParty(partyDoc.id, user);
+    }
+
+    return expired.length;
+}
+
 export function subscribeToParty(partyId, onData, onError) {
     let party = null;
     let members = null;
@@ -274,22 +297,18 @@ export function subscribeToParty(partyId, onData, onError) {
 }
 
 export function subscribeToParties(onData, onError) {
-    return onSnapshot(
+    const partiesQuery = query(
         collection(db, "watchParty"),
+        orderBy("createdAt", "desc"),
+        limit(PARTY_LIST_LIMIT),
+    );
+
+    return onSnapshot(
+        partiesQuery,
         (snapshot) => {
-            const parties = snapshot.docs
-                .map((party) => ({id: party.id, ...party.data()}))
-                .sort((a, b) => timestampToMillis(b.createdAt) - timestampToMillis(a.createdAt));
+            const parties = snapshot.docs.map((party) => ({id: party.id, ...party.data()}));
             onData(parties);
         },
         (error) => onError?.(error),
     );
-}
-
-export async function getParties() {
-    return getDocs(collection(db, "watchParty"));
-}
-
-export async function updatePartyStatus(partyId, status) {
-    return updateDoc(doc(db, "watchParty", partyId), {status});
 }

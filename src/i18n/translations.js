@@ -71,6 +71,11 @@ export const translations = {
             joinError: "Non è stato possibile partecipare al party.",
             createError: "Non è stato possibile creare il party.",
             deleteError: "Non è stato possibile eliminare il party.",
+            cleanup: "Elimina party chiusi vecchi",
+            cleanupConfirm: "Eliminare i tuoi party chiusi da più di {{days}} giorni? L'operazione non può essere annullata.",
+            cleanupDone: "Party eliminati: {{count}}.",
+            cleanupNone: "Nessun party chiuso da più di {{days}} giorni.",
+            cleanupError: "Non è stato possibile eliminare i party. Riprova.",
             created: "Party creato!",
         },
         home: {
@@ -269,6 +274,11 @@ export const translations = {
             joinError: "Could not join the party.",
             createError: "Could not create the party.",
             deleteError: "Could not delete the party.",
+            cleanup: "Delete old closed parties",
+            cleanupConfirm: "Delete your closed parties older than {{days}} days? This action cannot be undone.",
+            cleanupDone: "Parties deleted: {{count}}.",
+            cleanupNone: "No parties closed more than {{days}} days ago.",
+            cleanupError: "Could not delete the parties. Please try again.",
             created: "Party created!",
         },
         home: {
