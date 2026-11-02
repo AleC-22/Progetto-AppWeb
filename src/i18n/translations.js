@@ -164,15 +164,12 @@ export const translations = {
         profile: {
             title: "Impostazioni profilo",
             account: "Account",
-            favoriteGenre: "Scegli il tuo genere preferito",
-            select: "-- Seleziona --",
             language: "Lingua",
             deleteAccount: "Elimina account",
             deleteConfirm: "Sei sicuro di voler eliminare il tuo account? L'operazione non può essere annullata.",
             deleted: "Account eliminato.",
             deleteError: "Non è stato possibile eliminare l'account. Riprova.",
             recentLogin: "Per sicurezza, effettua di nuovo l'accesso prima di eliminare l'account.",
-            saved: "Preferenza salvata.",
         },
         credits: {
             title: "Crediti",
@@ -365,15 +362,12 @@ export const translations = {
         profile: {
             title: "Profile settings",
             account: "Account",
-            favoriteGenre: "Choose your favorite genre",
-            select: "-- Select --",
             language: "Language",
             deleteAccount: "Delete account",
             deleteConfirm: "Are you sure you want to delete your account? This action cannot be undone.",
             deleted: "Account deleted.",
             deleteError: "Could not delete your account. Please try again.",
             recentLogin: "For security reasons, please sign in again before deleting your account.",
-            saved: "Preference saved.",
         },
         credits: {
             title: "Credits",

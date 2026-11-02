@@ -14,7 +14,7 @@ Interfaccia bilingue **Italiano / English**, installabile come PWA.
 - Aggiornamenti in tempo reale tramite Firestore (`onSnapshot`)
 - Calcolo del film più votato, gestione dei pareggi e salvataggio del risultato
 - Sezione "Prossime uscite" con paginazione (TMDb)
-- Profilo con genere preferito, lingua ed eliminazione account
+- Profilo con lingua ed eliminazione account
 - PWA con icone, manifest e cache offline
 - UI responsive per desktop e mobile
 
@@ -86,7 +86,6 @@ npx --yes firebase-tools deploy --only firestore:rules
 6. In **Authentication → Settings → Authorized domains** aggiungi il dominio da cui servi l'app (es. `localhost` è già presente; per il deploy aggiungi il dominio di produzione).
 
 Le regole in [`firestore.rules`](./firestore.rules) consentono:
-- a ogni utente di leggere/scrivere solo il proprio documento `users/{uid}`;
 - ai membri autenticati di leggere i party;
 - al creatore di creare/chiudere/eliminare il party;
 - a ogni membro di scrivere solo le proprie preferenze;
