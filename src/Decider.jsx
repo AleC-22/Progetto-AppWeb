@@ -2,6 +2,7 @@ import {useEffect, useRef, useState} from "react";
 import {closeParty, submitPreferences, subscribeToParty} from "./partyHandler.js";
 import {getImageUrl} from "./TMDb.js";
 import {LoadingScreen} from "./LoadingScreen.jsx";
+import {PartyCode} from "./PartyCode.jsx";
 import {useI18n} from "./i18n/context.js";
 
 export function Decider({partyId, user, onExit}) {
@@ -238,6 +239,8 @@ export function Decider({partyId, user, onExit}) {
                         <div className="progress-bar bg-success" style={{width: `${progress}%`}}/>
                     </div>
 
+                    <PartyCode code={partyId}/>
+
                     {!allFinished && <p className="text-muted">{t("decider.endText")}</p>}
 
                     {error && <p className="form-error mt-3">{error}</p>}
@@ -273,6 +276,8 @@ export function Decider({partyId, user, onExit}) {
                     <div className="progress-bar bg-success" style={{width: `${progress}%`}}/>
                 </div>
             </div>
+
+            <PartyCode code={partyId}/>
 
             <div className="movie-card">
                 <img

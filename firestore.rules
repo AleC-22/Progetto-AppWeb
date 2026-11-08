@@ -10,8 +10,20 @@ service cloud.firestore {
       return isSignedIn() && party.ownerId == request.auth.uid;
     }
 
+    function partyData(partyId) {
+      return get(/databases/$(database)/documents/watchParty/$(partyId)).data;
+    }
+
+    function isPartyMember(partyId) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/watchParty/$(partyId)/members/$(request.auth.uid));
+    }
+
     match /watchParty/{partyId} {
-      allow read: if isSignedIn();
+      // The document ID is the invite code. Any signed-in user who knows the
+      // code can read the room, but only the owner can list their rooms.
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && resource.data.ownerId == request.auth.uid;
 
       allow create: if isSignedIn()
         && request.resource.data.ownerId == request.auth.uid
@@ -24,16 +36,13 @@ service cloud.firestore {
         && request.resource.data.memberIds == [request.auth.uid]
         && request.resource.data.films is list
         && request.resource.data.films.size() > 0
-        && request.resource.data.films.size() <= 20
-        && request.resource.data.maxMembers >= 2
-        && request.resource.data.maxMembers <= 8;
+        && request.resource.data.films.size() <= 20;
 
       allow update: if isOwner(resource.data)
         || (isSignedIn()
           && resource.data.status == 'open'
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberCount', 'memberIds'])
           && request.resource.data.memberCount == resource.data.memberCount + 1
-          && request.resource.data.memberCount <= resource.data.maxMembers
           && request.resource.data.memberIds.hasAll(resource.data.memberIds)
           && request.resource.data.memberIds.hasAll([request.auth.uid])
           && !resource.data.memberIds.hasAny([request.auth.uid])
@@ -42,7 +51,16 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data);
 
       match /members/{memberId} {
-        allow read: if isSignedIn();
+        // A user can always read their own member document, even before it
+        // exists (needed by the join transaction). Members and the owner can
+        // read the whole member list of the room. Collection-group queries are
+        // rejected because the party path is not fully bound.
+        allow get: if isSignedIn()
+          && (memberId == request.auth.uid
+            || isPartyMember(partyId)
+            || isOwner(partyData(partyId)));
+
+        allow list: if isPartyMember(partyId) || isOwner(partyData(partyId));
 
         allow create: if isSignedIn()
           && memberId == request.auth.uid
@@ -62,7 +80,7 @@ service cloud.firestore {
 
         allow delete: if isSignedIn()
           && (memberId == request.auth.uid
-            || isOwner(get(/databases/$(database)/documents/watchParty/$(partyId)).data));
+            || isOwner(partyData(partyId)));
       }
     }
   }

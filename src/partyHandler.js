@@ -3,9 +3,7 @@ import {
     doc,
     getDoc,
     getDocs,
-    limit,
     onSnapshot,
-    orderBy,
     query,
     runTransaction,
     serverTimestamp,
@@ -14,14 +12,15 @@ import {
 } from "firebase/firestore";
 import {db} from "./Firebase.js";
 import {calculateMatch} from "./matching.js";
-import {isExpiredClosedParty} from "./partyUtils.js";
+import {isExpiredClosedParty, timestampToMillis} from "./partyUtils.js";
+import {generatePartyCode, isValidPartyCode, normalizePartyCode} from "./partyCode.js";
 
-// The lobby only needs the most recent parties. This bounds the documents
-// downloaded on every visit and keeps realtime reads predictable.
-export const PARTY_LIST_LIMIT = 50;
+// A random collision on an 8-character code is extremely unlikely, but a
+// couple of retries keep creation safe without user intervention.
+export const PARTY_CODE_MAX_ATTEMPTS = 5;
 
 // Closed parties are kept for a while so members can review results, then
-// the owner can remove them from the lobby.
+// the owner can remove them from their room list.
 export const CLEANUP_MAX_AGE_DAYS = 30;
 
 export class PartyError extends Error {
@@ -53,40 +52,65 @@ export function isPartyMember(party, user) {
     return (party.members ?? []).some((member) => member.uid === user.uid || member.email === user.email);
 }
 
-export async function createParty(films, owner, partyName, maxMembers = 4) {
-    const partyRef = doc(collection(db, "watchParty"));
-    const ownerRef = memberRef(partyRef.id, owner.uid);
+export async function createParty(
+    films,
+    owner,
+    partyName,
+    {generateCode = generatePartyCode, maxAttempts = PARTY_CODE_MAX_ATTEMPTS} = {},
+) {
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+        const code = generateCode();
+        const partyRef = doc(db, "watchParty", code);
+        const ownerRef = memberRef(code, owner.uid);
 
-    await runTransaction(db, async (transaction) => {
-        transaction.set(partyRef, {
-            partyName,
-            ownerId: owner.uid,
-            ownerEmail: owner.email,
-            films,
-            maxMembers,
-            memberIds: [owner.uid],
-            memberCount: 1,
-            status: "open",
-            result: null,
-            createdAt: serverTimestamp(),
-        });
+        try {
+            await runTransaction(db, async (transaction) => {
+                const existing = await transaction.get(partyRef);
+                if (existing.exists()) {
+                    throw new PartyError("code-taken");
+                }
 
-        transaction.set(ownerRef, {
-            uid: owner.uid,
-            email: owner.email,
-            displayName: owner.displayName ?? owner.email,
-            isFinished: false,
-            preferredFilms: [],
-            joinedAt: Date.now(),
-        });
-    });
+                transaction.set(partyRef, {
+                    partyName,
+                    ownerId: owner.uid,
+                    ownerEmail: owner.email,
+                    films,
+                    memberIds: [owner.uid],
+                    memberCount: 1,
+                    status: "open",
+                    result: null,
+                    createdAt: serverTimestamp(),
+                });
 
-    return partyRef;
+                transaction.set(ownerRef, {
+                    uid: owner.uid,
+                    email: owner.email,
+                    displayName: owner.displayName ?? owner.email,
+                    isFinished: false,
+                    preferredFilms: [],
+                    joinedAt: Date.now(),
+                });
+            });
+
+            return partyRef;
+        } catch (error) {
+            if (error?.code !== "code-taken") {
+                throw error;
+            }
+        }
+    }
+
+    throw new PartyError("code-exhausted");
 }
 
 export async function joinParty(partyId, user) {
-    const partyRef = doc(db, "watchParty", partyId);
-    const userRef = memberRef(partyId, user.uid);
+    const code = normalizePartyCode(partyId);
+    if (!isValidPartyCode(code)) {
+        throw new PartyError("invalid-code");
+    }
+
+    const partyRef = doc(db, "watchParty", code);
+    const userRef = memberRef(code, user.uid);
 
     return runTransaction(db, async (transaction) => {
         const partySnap = await transaction.get(partyRef);
@@ -104,12 +128,7 @@ export async function joinParty(partyId, user) {
             throw new PartyError("closed");
         }
 
-        const maxMembers = party.maxMembers ?? 4;
         const memberCount = party.memberCount ?? party.members?.length ?? 0;
-        if (memberCount >= maxMembers) {
-            throw new PartyError("full");
-        }
-
         const memberIds = party.memberIds ?? (party.members ?? []).map((member) => member.uid).filter(Boolean);
 
         transaction.set(userRef, {
@@ -296,17 +315,22 @@ export function subscribeToParty(partyId, onData, onError) {
     };
 }
 
-export function subscribeToParties(onData, onError) {
+export function subscribeToOwnedParties(uid, onData, onError) {
+    // Only the owner can list parties. Sorting client-side avoids a composite
+    // index on (ownerId, createdAt).
     const partiesQuery = query(
         collection(db, "watchParty"),
-        orderBy("createdAt", "desc"),
-        limit(PARTY_LIST_LIMIT),
+        where("ownerId", "==", uid),
     );
 
     return onSnapshot(
         partiesQuery,
         (snapshot) => {
-            const parties = snapshot.docs.map((party) => ({id: party.id, ...party.data()}));
+            const parties = snapshot.docs
+                .map((party) => ({id: party.id, ...party.data()}))
+                .sort((left, right) => (
+                    timestampToMillis(right.createdAt) - timestampToMillis(left.createdAt)
+                ));
             onData(parties);
         },
         (error) => onError?.(error),

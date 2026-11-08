@@ -1,16 +1,17 @@
 # 🎬 Movie Matcher
 
-Applicazione web per **scegliere il film giusto insieme ai tuoi amici**. Crea una lobby, scegli genere e anno, vota i film con 👍/👎 e lascia che il match decida per voi.
+Applicazione web per **scegliere il film giusto insieme ai tuoi amici**. Crea una stanza, condividi il codice d'invito, scegli genere e anno, vota i film con 👍/👎 e lascia che il match decida per voi.
 
 Interfaccia bilingue **Italiano / English**, installabile come PWA.
 
 ## Funzionalità
 
 - Registrazione e login con email/password o Google (Firebase Auth)
-- Creazione di una Watch Party con nome, genere e anno di uscita
+- Creazione di una stanza con nome, genere e anno di uscita
 - Filtro lingua alla creazione: edizione italiana, solo film italiani o tutte le lingue
-- Fino a 4 membri per party, con controllo della capienza lato server
-- Lobby limitata ai 50 party più recenti, con pulizia manuale dei party chiusi da oltre 30 giorni
+- Accesso solo su invito: le stanze non sono pubbliche e si entra con un codice di 8 caratteri
+- Nessun limite fisso di membri; il proprietario vede solo le proprie stanze
+- Pulizia manuale delle proprie stanze chiuse da oltre 30 giorni
 - Voto dei film con like/dislike e barra di avanzamento condivisa
 - Aggiornamenti in tempo reale tramite Firestore (`onSnapshot`)
 - Calcolo del film più votato, gestione dei pareggi e salvataggio del risultato
@@ -87,19 +88,24 @@ npx --yes firebase-tools deploy --only firestore:rules
 6. In **Authentication → Settings → Authorized domains** aggiungi il dominio da cui servi l'app (es. `localhost` è già presente; per il deploy aggiungi il dominio di produzione).
 
 Le regole in [`firestore.rules`](./firestore.rules) consentono:
-- ai membri autenticati di leggere i party;
-- al creatore di creare/chiudere/eliminare il party;
+- a ogni utente autenticato di leggere una stanza **solo se ne conosce il codice** (l'ID del documento è il codice d'invito);
+- al proprietario di elencare le proprie stanze e di creare/chiudere/eliminare la stanza;
+- ai soli membri di leggere la lista dei membri della propria stanza;
 - a ogni membro di scrivere solo le proprie preferenze;
-- l'ingresso nel party solo incrementando il contatore e senza superare `maxMembers`;
-- limiti espliciti sui dati: nome del party ≤ 60 caratteri, massimo 20 film per party e 20 preferenze per membro.
+- l'ingresso nella stanza aggiungendo se stessi a `memberIds`, senza alcun limite di capienza;
+- limiti espliciti sui dati: nome della stanza ≤ 60 caratteri, massimo 20 film per stanza e 20 preferenze per membro.
 
-## Lobby, limiti e pulizia
+Non c'è una lobby pubblica: senza il codice non è possibile scoprire o elencare le stanze degli altri.
 
-Per mantenere letture Firestore prevedibili, la lobby ascolta solo i **50 party più recenti** (`orderBy("createdAt", "desc")` + `limit(50)`). Non serve un indice composito: Firestore crea automaticamente l'indice sul singolo campo `createdAt`.
+## Codice d'invito, limiti e pulizia
 
-I party chiusi restano consultabili per un po'. Ogni proprietario può eliminare i propri party chiusi da **più di 30 giorni** con il pulsante **“Elimina party chiusi vecchi”** nella lobby. La pulizia:
+Le stanze non sono elencate pubblicamente. Alla creazione viene generato un codice di **8 caratteri** dall'alfabeto `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`, scelto per evitare caratteri ambigui (`I`, `O`, `0`, `1`). Il codice **è** l'ID del documento Firestore: chi lo conosce può leggere la stanza, chi non lo conosce non può né trovarla né elencarla. In caso di collisione (estremamente improbabile) la creazione ritenta con un nuovo codice.
 
-- è manuale e riguarda solo i party di cui l'utente è proprietario;
+Per limitare le letture Firestore, la pagina Watch Party ascolta in tempo reale solo le stanze di cui l'utente è proprietario (`where("ownerId", "==", uid)`). L'ordinamento avviene lato client, quindi non serve un indice composito. Non esiste più un limite fisso di membri.
+
+Le stanze chiuse restano consultabili per un po'. Ogni proprietario può eliminare le proprie stanze chiuse da **più di 30 giorni** con il pulsante **“Elimina stanze chiuse vecchie”**. La pulizia:
+
+- è manuale e riguarda solo le stanze di cui l'utente è proprietario;
 - elimina in batch anche i documenti della sotto-collezione `members`;
 - non richiede Cloud Functions, Admin SDK o piani a pagamento.
 
@@ -214,17 +220,20 @@ server/
 src/
 ├── App.jsx                 # Auth gate + login/registrazione
 ├── MenuHandler.jsx         # Navigazione Home / News / Profilo
-├── WatchParty.jsx          # Lista party e flusso di creazione
-├── PartyList.jsx           # Lista realtime + join/delete
+├── WatchParty.jsx          # Stanze possedute + flusso di creazione
+├── PartyList.jsx           # Lista realtime delle proprie stanze + delete
+├── JoinPartyForm.jsx       # Ingresso tramite codice d'invito
+├── PartyCode.jsx           # Badge codice con copia negli appunti
 ├── Home.jsx / Year.jsx     # Scelta categoria e anno
-├── ConfirmParty.jsx        # Creazione party su Firestore
+├── ConfirmParty.jsx        # Creazione stanza su Firestore
 ├── Decider.jsx             # Voto film, progresso, risultato
 ├── Profile.jsx             # Impostazioni account
 ├── Credits.jsx             # Attribuzione TMDb
 ├── News.jsx                # Prossime uscite TMDb
 ├── Firebase.js             # Init Firebase + emulatori
 ├── partyHandler.js         # Transazioni e subscription Firestore
-├── partyUtils.js           # Utility date/pulizia party (testate)
+├── partyCode.js            # Generazione, normalizzazione e validazione codici (testate)
+├── partyUtils.js           # Utility date/pulizia stanze (testate)
 ├── matching.js             # Algoritmo di matching (testato)
 ├── TMDb.js                 # Client fetch del proxy TMDb + fallback demo
 ├── genres.js               # Generi condivisi
@@ -237,8 +246,9 @@ vercel.json                 # Header di sicurezza
 
 ```text
 watchParty/{partyId}
+  # partyId è il codice d'invito (8 caratteri)
   partyName, ownerId, ownerEmail, films
-  maxMembers, memberCount, memberIds
+  memberCount, memberIds
   status: "open" | "closed"
   result: { winner, votes, tied, ... } | null
   createdAt, closedAt
@@ -250,7 +260,8 @@ watchParty/{partyId}/members/{uid}
 ```
 
 Le operazioni critiche usano **transazioni**:
-- ingresso nel party: controlla capienza e duplicati;
+- creazione: genera un codice libero e crea stanza + membro proprietario;
+- ingresso nella stanza: verifica codice, stato aperto e duplicati, senza limiti di capienza;
 - invio preferenze: aggiorna solo il documento del membro;
 - chiusura: verifica che tutti abbiano votato e salva il risultato.
 
@@ -271,15 +282,15 @@ I test coprono:
 - costruzione dei filtri lingua e edizione italiana;
 - chiamate fetch al proxy TMDb, errori e risposte malformate;
 - utility di pulizia dei party chiusi;
+- generazione, normalizzazione e validazione dei codici d'invito;
 - whitelist, autenticazione e gestione errori del proxy TMDb.
 
 ## Roadmap
 
-- [ ] Link/codice d'invito condivisibile
 - [ ] Uscita volontaria da un party
 - [ ] Storico dei party e statistiche personali
 - [ ] Notifiche push per chiusura party
-- [ ] Deploy automatico (Firebase Hosting / Vercel)
+- [ ] Deploy automatico (Vercel)
 - [ ] Test end-to-end del flusso multiutente
 
 ## Sicurezza

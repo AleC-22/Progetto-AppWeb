@@ -3,9 +3,7 @@ import {
     CLEANUP_MAX_AGE_DAYS,
     cleanupOldClosedParties,
     deleteParty,
-    isPartyMember,
-    joinParty,
-    subscribeToParties,
+    subscribeToOwnedParties,
 } from "./partyHandler.js";
 import {useI18n} from "./i18n/context.js";
 
@@ -13,21 +11,26 @@ function partySize(party) {
     return party.memberCount ?? party.members?.length ?? 0;
 }
 
-function maxSize(party) {
-    return party.maxMembers ?? party.maxMember ?? 4;
-}
-
 export function PartyList({user, onJoin}) {
     const {t} = useI18n();
     const [parties, setParties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionError, setActionError] = useState("");
-    const [joiningId, setJoiningId] = useState(null);
     const [cleaning, setCleaning] = useState(false);
     const [cleanupMessage, setCleanupMessage] = useState("");
 
+    const userId = user?.uid;
+
     useEffect(() => {
-        const unsubscribe = subscribeToParties(
+        if (!userId) {
+            setParties([]);
+            setLoading(false);
+            return undefined;
+        }
+
+        setLoading(true);
+        const unsubscribe = subscribeToOwnedParties(
+            userId,
             (data) => {
                 setParties(data);
                 setLoading(false);
@@ -40,32 +43,7 @@ export function PartyList({user, onJoin}) {
         );
 
         return unsubscribe;
-    }, [t]);
-
-    const handleJoin = async (party) => {
-        if (isPartyMember(party, user)) {
-            onJoin(party.id);
-            return;
-        }
-
-        setActionError("");
-        setJoiningId(party.id);
-        try {
-            await joinParty(party.id, user);
-            onJoin(party.id);
-        } catch (error) {
-            console.error(error);
-            if (error.code === "full") {
-                setActionError(t("errors.full"));
-            } else if (error.code === "closed") {
-                setActionError(t("errors.closed"));
-            } else {
-                setActionError(t("party.joinError"));
-            }
-        } finally {
-            setJoiningId(null);
-        }
-    };
+    }, [userId, t]);
 
     const handleDelete = async (party) => {
         if (!window.confirm(t("party.deleteConfirm"))) {
@@ -115,54 +93,35 @@ export function PartyList({user, onJoin}) {
                 : (
                     <ul className="party-list">
                         {parties.map((party) => {
-                            const member = isPartyMember(party, user);
-                            const owner = party.ownerId === user.uid || party.ownerEmail === user.email;
                             const closed = party.status === "closed";
-                            const full = partySize(party) >= maxSize(party);
-                            const openLabel = member
-                                ? t("party.open")
-                                : closed
-                                    ? t("party.closed")
-                                    : full
-                                        ? t("party.full")
-                                        : t("party.join");
 
                             return (
                                 <li key={party.id} className="party-item">
                                     <div className="party-item-main">
                                         <strong>{party.partyName}</strong>
                                         <span className="party-meta">
-                                            {t("party.host")}: {party.ownerEmail ?? party.partyOwnerEmail ?? "—"}
+                                            {t("party.members", {count: partySize(party)})}
                                             {" · "}
-                                            {t("party.members", {
-                                                count: partySize(party),
-                                                max: maxSize(party),
-                                            })}
+                                            <span className="party-code-inline">{party.id}</span>
                                         </span>
                                         {closed && <span className="badge bg-dark">{t("party.closed")}</span>}
                                     </div>
 
                                     <div className="party-item-actions">
-                                        {member && !closed && (
-                                            <span className="badge bg-secondary">{t("party.joined")}</span>
-                                        )}
                                         <button
                                             type="button"
-                                            className={`btn btn-sm ${member ? "btn-primary" : "btn-success"}`}
-                                            onClick={() => handleJoin(party)}
-                                            disabled={joiningId === party.id || (!member && (closed || full))}
+                                            className="btn btn-sm btn-primary"
+                                            onClick={() => onJoin(party.id)}
                                         >
-                                            {joiningId === party.id ? t("common.loading") : openLabel}
+                                            {t("party.open")}
                                         </button>
-                                        {owner && (
-                                            <button
-                                                type="button"
-                                                className="btn btn-sm btn-outline-danger"
-                                                onClick={() => handleDelete(party)}
-                                            >
-                                                {t("common.delete")}
-                                            </button>
-                                        )}
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-danger"
+                                            onClick={() => handleDelete(party)}
+                                        >
+                                            {t("common.delete")}
+                                        </button>
                                     </div>
                                 </li>
                             );
@@ -175,7 +134,7 @@ export function PartyList({user, onJoin}) {
                     type="button"
                     className="btn btn-sm btn-outline-secondary"
                     onClick={handleCleanup}
-                    disabled={cleaning}
+                    disabled={cleaning || !userId}
                 >
                     {cleaning ? t("common.loading") : t("party.cleanup")}
                 </button>

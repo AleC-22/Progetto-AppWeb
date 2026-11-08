@@ -1,6 +1,7 @@
 import {useState} from "react";
 import {Home} from "./Home.jsx";
 import {PartyList} from "./PartyList.jsx";
+import {JoinPartyForm} from "./JoinPartyForm.jsx";
 import {Decider} from "./Decider.jsx";
 import {useI18n} from "./i18n/context.js";
 
@@ -57,6 +58,12 @@ export function WatchParty({user}) {
                 </div>
 
                 <hr/>
+
+                <JoinPartyForm user={user} onJoin={setPartyId}/>
+
+                <hr/>
+
+                <h3 className="h5 mb-3">{t("party.ownedTitle")}</h3>
 
                 <PartyList user={user} onJoin={setPartyId}/>
             </div>
