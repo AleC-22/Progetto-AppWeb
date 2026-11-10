@@ -232,6 +232,9 @@ export const translations = {
             notFinished: "Qualcuno non ha ancora votato.",
             notMember: "Non fai parte di questa stanza.",
             missingTmdbKey: "Manca la chiave TMDb.",
+            crashTitle: "Qualcosa è andato storto",
+            crashText: "Si è verificato un errore imprevisto. Ricarica la pagina per continuare.",
+            reload: "Ricarica",
         },
     },
     en: {
@@ -467,6 +470,9 @@ export const translations = {
             notFinished: "Someone has not voted yet.",
             notMember: "You are not a member of this room.",
             missingTmdbKey: "TMDb key missing.",
+            crashTitle: "Something went wrong",
+            crashText: "An unexpected error occurred. Reload the page to continue.",
+            reload: "Reload",
         },
     },
 };

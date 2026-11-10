@@ -245,7 +245,9 @@ api/
 server/
 ├── tmdbProxy.js            # Logica condivisa: whitelist, auth, cache
 ├── tmdbProxy.test.js       # Test del proxy
-└── tmdbProxyPlugin.js      # Middleware proxy per Vite dev/preview
+├── tmdbProxyPlugin.js      # Middleware proxy per Vite dev/preview
+├── requestGuard.js         # Controllo same-origin + rate limit (testato)
+└── csp.js                  # Content-Security-Policy condivisa (testata)
 src/
 ├── App.jsx                 # Auth gate + login/registrazione
 ├── MenuHandler.jsx         # Navigazione Home / News / Profilo
@@ -258,6 +260,7 @@ src/
 ├── Decider.jsx             # Voto film, progresso, risultato
 ├── Profile.jsx             # Impostazioni account
 ├── PrivacyNotice.jsx       # Informativa privacy bilingue (modale)
+├── ErrorBoundary.jsx       # Schermata di ricarica in caso di errore UI
 ├── Credits.jsx             # Attribuzione TMDb
 ├── News.jsx                # Prossime uscite TMDb
 ├── Firebase.js             # Init Firebase + emulatori
@@ -314,7 +317,9 @@ I test coprono:
 - chiamate fetch al proxy TMDb, errori e risposte malformate;
 - utility di pulizia dei party chiusi;
 - generazione, normalizzazione e validazione dei codici d'invito;
-- whitelist, autenticazione e gestione errori del proxy TMDb.
+- whitelist, autenticazione e gestione errori del proxy TMDb;
+- controllo same-origin e rate limit del proxy TMDb;
+- sincronizzazione della CSP tra `server/csp.js` e `vercel.json`.
 
 ## Roadmap
 
@@ -330,5 +335,7 @@ I test coprono:
 - La chiave TMDb vive solo lato server (`TMDB_API_KEY`), mai nel bundle client.
 - Le regole Firestore sono versionate in `firestore.rules` e limitano dimensione e forma dei dati scritti.
 - Le richieste TMDb passano da un proxy con whitelist di endpoint e parametri.
-- `vercel.json` aggiunge header di sicurezza di base; valuta una CSP quando il set di risorse esterne sarà stabile.
+- Il proxy TMDb accetta solo richieste same-origin (controllo `Origin`/`Referer`/`Sec-Fetch-Site`) e applica un limite in memoria di 60 richieste al minuto per IP. Il limite è per istanza serverless: scoraggia l'abuso occasionale, non garantisce una quota globale.
+- `vercel.json` applica header di sicurezza (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS) e una **Content Security Policy** condivisa con `server/csp.js`. Se cambi progetto Firebase, aggiorna `frame-src` con il nuovo `authDomain`.
+- Un error boundary React mostra una schermata di ricarica invece di lasciare la pagina bianca.
 - L'account di test presente nelle vecchie versioni del README è stato rimosso: createne uno nuovo o eliminalo dalla console Firebase se non serve più.

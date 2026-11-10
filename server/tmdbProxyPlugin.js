@@ -1,9 +1,22 @@
 import {proxyTmdbRequest, writeNodeResponse} from "./tmdbProxy.js";
+import {createRateLimiter, guardRequest} from "./requestGuard.js";
 
 function proxyMiddleware(apiKey) {
+    const limiter = createRateLimiter();
+
     return async (request, response, next) => {
         if (!request.url?.startsWith("/api/tmdb/")) {
             next();
+            return;
+        }
+
+        const blocked = guardRequest({
+            headers: request.headers,
+            remoteAddress: request.socket?.remoteAddress,
+            limiter,
+        });
+        if (blocked) {
+            writeNodeResponse(response, blocked);
             return;
         }
 
@@ -26,7 +39,7 @@ function proxyMiddleware(apiKey) {
  */
 export function tmdbProxyPlugin(apiKey) {
     return {
-        name: "movie-matcher-tmdb-proxy",
+        name: "flixsort-tmdb-proxy",
         configureServer(server) {
             server.middlewares.use(proxyMiddleware(apiKey));
         },
