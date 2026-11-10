@@ -133,7 +133,7 @@ function App() {
                     />
                     <label htmlFor="privacy-accept" className="form-check-label">
                         {t("privacy.accept")}
-                    </label>
+                    </label>{" "}
                     <button
                         type="button"
                         className="privacy-link privacy-link-inline"
