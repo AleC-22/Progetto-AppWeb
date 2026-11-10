@@ -8,6 +8,7 @@ export function Profile({user, setUser}) {
     const {t} = useI18n();
     const [error, setError] = useState("");
     const [deleting, setDeleting] = useState(false);
+    const isGuest = Boolean(user?.isAnonymous);
 
     const deleteAccountHandler = async () => {
         if (!window.confirm(t("profile.deleteConfirm"))) {
@@ -37,7 +38,10 @@ export function Profile({user, setUser}) {
 
             <div className="profile-form-group">
                 <label className="form-label">{t("profile.account")}</label>
-                <p className="profile-account">{user.displayName || user.email}</p>
+                <p className="profile-account">
+                    {isGuest ? t("profile.guest") : (user.displayName || user.email)}
+                </p>
+                {isGuest && <p className="form-text">{t("profile.guestHint")}</p>}
 
                 {error && <p className="form-error mt-2 mb-0">{error}</p>}
 

@@ -36,6 +36,8 @@ export const translations = {
             tooManyRequests: "Troppi tentativi. Riprova tra qualche minuto.",
             genericError: "Accesso non riuscito. Riprova.",
             googleError: "Accesso con Google non riuscito.",
+            guest: "Continua come ospite",
+            guestError: "Accesso ospite non disponibile. Riprova o accedi.",
         },
         nav: {
             home: "Home",
@@ -173,6 +175,8 @@ export const translations = {
         profile: {
             title: "Impostazioni profilo",
             account: "Account",
+            guest: "Ospite",
+            guestHint: "Stai usando una sessione ospite. Se cancelli i dati del browser perderai l'accesso alle tue stanze.",
             language: "Lingua",
             deleteAccount: "Elimina account",
             deleteConfirm: "Sei sicuro di voler eliminare il tuo account? L'operazione non può essere annullata.",
@@ -242,6 +246,8 @@ export const translations = {
             tooManyRequests: "Too many attempts. Please try again in a few minutes.",
             genericError: "Sign in failed. Please try again.",
             googleError: "Google sign-in failed.",
+            guest: "Continue as guest",
+            guestError: "Guest access is unavailable. Try again or sign in.",
         },
         nav: {
             home: "Home",
@@ -379,6 +385,8 @@ export const translations = {
         profile: {
             title: "Profile settings",
             account: "Account",
+            guest: "Guest",
+            guestHint: "You are using a guest session. If you clear your browser data, you will lose access to your rooms.",
             language: "Language",
             deleteAccount: "Delete account",
             deleteConfirm: "Are you sure you want to delete your account? This action cannot be undone.",

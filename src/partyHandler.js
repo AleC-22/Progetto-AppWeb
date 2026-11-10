@@ -43,13 +43,13 @@ export function isPartyMember(party, user) {
     if (!party || !user) {
         return false;
     }
-    if (party.ownerId === user.uid || party.ownerEmail === user.email) {
+    if (party.ownerId === user.uid) {
         return true;
     }
     if (Array.isArray(party.memberIds) && party.memberIds.includes(user.uid)) {
         return true;
     }
-    return (party.members ?? []).some((member) => member.uid === user.uid || member.email === user.email);
+    return (party.members ?? []).some((member) => member.uid === user.uid);
 }
 
 export async function createParty(
@@ -73,8 +73,8 @@ export async function createParty(
                 transaction.set(partyRef, {
                     partyName,
                     ownerId: owner.uid,
-                    ownerEmail: owner.email,
                     films,
+                    finishedCount: 0,
                     memberIds: [owner.uid],
                     memberCount: 1,
                     status: "open",
@@ -84,8 +84,6 @@ export async function createParty(
 
                 transaction.set(ownerRef, {
                     uid: owner.uid,
-                    email: owner.email,
-                    displayName: owner.displayName ?? owner.email,
                     isFinished: false,
                     preferredFilms: [],
                     joinedAt: Date.now(),
@@ -133,8 +131,6 @@ export async function joinParty(partyId, user) {
 
         transaction.set(userRef, {
             uid: user.uid,
-            email: user.email,
-            displayName: user.displayName ?? user.email,
             isFinished: false,
             preferredFilms: [],
             joinedAt: Date.now(),
@@ -169,10 +165,15 @@ export async function submitPreferences(partyId, user, filmsArray) {
             return;
         }
 
+        const party = partySnap.data();
+
         transaction.update(userRef, {
             preferredFilms: filmsArray,
             isFinished: true,
             finishedAt: Date.now(),
+        });
+        transaction.update(partyRef, {
+            finishedCount: (party.finishedCount ?? 0) + 1,
         });
     });
 }
@@ -186,7 +187,7 @@ export async function closeParty(partyId, user) {
     }
 
     const party = partySnap.data();
-    if (party.ownerId !== user.uid && party.ownerEmail !== user.email) {
+    if (party.ownerId !== user.uid) {
         throw new PartyError("not-owner");
     }
     if (party.status === "closed") {
@@ -240,7 +241,7 @@ export async function deleteParty(partyId, user) {
     }
 
     const party = partySnap.data();
-    if (party.ownerId !== user.uid && party.ownerEmail !== user.email) {
+    if (party.ownerId !== user.uid) {
         throw new PartyError("not-owner");
     }
 
@@ -275,13 +276,14 @@ export async function cleanupOldClosedParties(
     return expired.length;
 }
 
-export function subscribeToParty(partyId, onData, onError) {
+export function subscribeToParty(partyId, userId, onData, onError) {
     let party = null;
-    let members = null;
+    let member = null;
+    let memberLoaded = false;
 
     const emit = () => {
-        if (party !== null && members !== null) {
-            onData({party, members});
+        if (party !== null && memberLoaded) {
+            onData({party, member});
         }
     };
 
@@ -290,7 +292,6 @@ export function subscribeToParty(partyId, onData, onError) {
         (snapshot) => {
             if (!snapshot.exists()) {
                 party = null;
-                members = null;
                 onError?.(new PartyError("not-found"));
                 return;
             }
@@ -300,10 +301,13 @@ export function subscribeToParty(partyId, onData, onError) {
         (error) => onError?.(error),
     );
 
-    const unsubscribeMembers = onSnapshot(
-        membersCollection(partyId),
+    // Listening to the requester's own member document keeps reads constant:
+    // the old listener downloaded every member document on each vote.
+    const unsubscribeMember = onSnapshot(
+        memberRef(partyId, userId),
         (snapshot) => {
-            members = snapshot.docs.map((member) => ({id: member.id, ...member.data()}));
+            member = snapshot.exists() ? {id: snapshot.id, ...snapshot.data()} : null;
+            memberLoaded = true;
             emit();
         },
         (error) => onError?.(error),
@@ -311,7 +315,7 @@ export function subscribeToParty(partyId, onData, onError) {
 
     return () => {
         unsubscribeParty();
-        unsubscribeMembers();
+        unsubscribeMember();
     };
 }
 

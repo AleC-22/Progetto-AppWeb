@@ -8,7 +8,7 @@ import {useI18n} from "./i18n/context.js";
 export function Decider({partyId, user, onExit}) {
     const {t} = useI18n();
     const [party, setParty] = useState(null);
-    const [members, setMembers] = useState([]);
+    const [member, setMember] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -25,22 +25,23 @@ export function Decider({partyId, user, onExit}) {
 
         const unsubscribe = subscribeToParty(
             partyId,
-            ({party: nextParty, members: nextMembers}) => {
+            user.uid,
+            ({party: nextParty, member: nextMember}) => {
                 setParty(nextParty);
-                setMembers(nextMembers);
+                setMember(nextMember);
                 setLoading(false);
             },
             (subscriptionError) => {
                 console.error(subscriptionError);
                 setParty(null);
-                setMembers([]);
+                setMember(null);
                 setError(subscriptionError.code === "not-found" ? t("errors.notFound") : t("errors.generic"));
                 setLoading(false);
             },
         );
 
         return unsubscribe;
-    }, [partyId, t]);
+    }, [partyId, user.uid, t]);
 
     useEffect(() => {
         if ("Notification" in window && Notification.permission === "default") {
@@ -49,12 +50,13 @@ export function Decider({partyId, user, onExit}) {
         }
     }, []);
 
-    const me = members.find((member) => member.uid === user.uid || member.email === user.email);
+    const me = member;
     const movies = party?.films ?? [];
     const isClosed = party?.status === "closed" || Boolean(party?.result);
-    const isOwner = party && (party.ownerId === user.uid || party.ownerEmail === user.email);
-    const finishedCount = members.filter((member) => member.isFinished).length;
-    const allFinished = members.length > 0 && finishedCount === members.length;
+    const isOwner = party && party.ownerId === user.uid;
+    const memberCount = party?.memberCount ?? 0;
+    const finishedCount = party?.finishedCount ?? 0;
+    const allFinished = memberCount > 0 && finishedCount >= memberCount;
     const isFinished = Boolean(me?.isFinished) || submitting || currentIndex >= movies.length;
     const result = party?.result;
 
@@ -227,13 +229,13 @@ export function Decider({partyId, user, onExit}) {
     }
 
     if (isFinished) {
-        const progress = members.length > 0 ? Math.round((finishedCount / members.length) * 100) : 0;
+        const progress = memberCount > 0 ? Math.round((finishedCount / memberCount) * 100) : 0;
 
         return (
             <div className="home-page background-image">
                 <div className="form-box">
                     <h1 className="h3">{t("decider.endTitle")}</h1>
-                    <p>{t("decider.progress", {finished: finishedCount, total: members.length})}</p>
+                    <p>{t("decider.progress", {finished: finishedCount, total: memberCount})}</p>
 
                     <div className="progress mb-3" role="progressbar" aria-valuenow={progress} aria-valuemin="0" aria-valuemax="100">
                         <div className="progress-bar bg-success" style={{width: `${progress}%`}}/>
@@ -262,7 +264,7 @@ export function Decider({partyId, user, onExit}) {
     }
 
     const movie = movies[currentIndex];
-    const progress = members.length > 0 ? Math.round((finishedCount / members.length) * 100) : 0;
+    const progress = memberCount > 0 ? Math.round((finishedCount / memberCount) * 100) : 0;
     const movieRating = Math.round((movie.rating ?? 0) * 10) / 10;
 
     return (
@@ -270,7 +272,7 @@ export function Decider({partyId, user, onExit}) {
             <div className="decider-progress">
                 <div className="d-flex justify-content-between gap-3">
                     <span>{t("decider.movieCounter", {current: currentIndex + 1, total: movies.length})}</span>
-                    <span>{t("decider.progress", {finished: finishedCount, total: members.length})}</span>
+                    <span>{t("decider.progress", {finished: finishedCount, total: memberCount})}</span>
                 </div>
                 <div className="progress mt-2" role="progressbar" aria-valuenow={progress} aria-valuemin="0" aria-valuemax="100">
                     <div className="progress-bar bg-success" style={{width: `${progress}%`}}/>

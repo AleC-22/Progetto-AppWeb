@@ -7,6 +7,7 @@ Interfaccia bilingue **Italiano / English**, installabile come PWA.
 ## Funzionalità
 
 - Registrazione e login con email/password o Google (Firebase Auth)
+- Accesso come **ospite** senza registrazione (Firebase Anonymous Auth)
 - Creazione di una stanza con nome, genere e anno di uscita
 - Filtro lingua alla creazione: edizione italiana, solo film italiani o tutte le lingue
 - Accesso solo su invito: le stanze non sono pubbliche e si entra con un codice di 8 caratteri
@@ -76,6 +77,7 @@ L'app sarà su `http://localhost:5173`.
 3. In **Authentication → Sign-in method** abilita:
    - Email/Password
    - Google
+   - Anonymous (per la modalità ospite; se manca, il pulsante “Continua come ospite” restituisce `auth/admin-restricted-operation`)
 4. Crea un database **Cloud Firestore**.
 5. Pubblica le regole di sicurezza incluse nel repository:
 
@@ -91,17 +93,36 @@ Le regole in [`firestore.rules`](./firestore.rules) consentono:
 - a ogni utente autenticato di leggere una stanza **solo se ne conosce il codice** (l'ID del documento è il codice d'invito);
 - al proprietario di elencare le proprie stanze e di creare/chiudere/eliminare la stanza;
 - ai soli membri di leggere la lista dei membri della propria stanza;
-- a ogni membro di scrivere solo le proprie preferenze;
+- a ogni membro di scrivere solo le proprie preferenze e di incrementare `finishedCount` nella stanza nella stessa transazione del proprio voto;
+- al solo proprietario di eliminare documenti membro (durante la pulizia);
 - l'ingresso nella stanza aggiungendo se stessi a `memberIds`, senza alcun limite di capienza;
 - limiti espliciti sui dati: nome della stanza ≤ 60 caratteri, massimo 20 film per stanza e 20 preferenze per membro.
 
 Non c'è una lobby pubblica: senza il codice non è possibile scoprire o elencare le stanze degli altri.
+
+## Modalità ospite
+
+Il pulsante **“Continua come ospite”** crea una sessione anonima Firebase: non serve email, password o account Google. L'ospite ha un `uid` completo, quindi può creare stanze, entrare con un codice e votare come gli altri utenti.
+
+Limiti da conoscere:
+
+- la sessione vive **solo in quel browser**: cancellando i dati del sito o cambiando dispositivo si perde l'accesso alle stanze create da ospite;
+- non esiste un modo per recuperare il possesso delle stanze di un ospite;
+- per un uso duraturo conviene registrarsi.
+
+La modalità ospite non riduce da sola le letture Firestore: Auth e Firestore sono servizi separati e non esiste una collezione utenti.
 
 ## Codice d'invito, limiti e pulizia
 
 Le stanze non sono elencate pubblicamente. Alla creazione viene generato un codice di **8 caratteri** dall'alfabeto `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`, scelto per evitare caratteri ambigui (`I`, `O`, `0`, `1`). Il codice **è** l'ID del documento Firestore: chi lo conosce può leggere la stanza, chi non lo conosce non può né trovarla né elencarla. In caso di collisione (estremamente improbabile) la creazione ritenta con un nuovo codice.
 
 Per limitare le letture Firestore, la pagina Watch Party ascolta in tempo reale solo le stanze di cui l'utente è proprietario (`where("ownerId", "==", uid)`). L'ordinamento avviene lato client, quindi non serve un indice composito. Non esiste più un limite fisso di membri.
+
+### Letture durante il voto
+
+Nella stanza il client ascolta **solo due documenti**: la stanza e il proprio documento membro. La versione precedente ascoltava l'intera sotto-collezione `members`, quindi ogni voto generava una lettura per ogni partecipante (costo circa N×N).
+
+Ora la stanza mantiene un contatore `finishedCount`, aggiornato nella stessa transazione che segna il membro come “finito”. La barra di avanzamento usa `finishedCount` e `memberCount`, senza scaricare i documenti degli altri. I membri vengono letti **una sola volta** dal proprietario alla chiusura, per calcolare il risultato.
 
 Le stanze chiuse restano consultabili per un po'. Ogni proprietario può eliminare le proprie stanze chiuse da **più di 30 giorni** con il pulsante **“Elimina stanze chiuse vecchie”**. La pulizia:
 
@@ -247,14 +268,14 @@ vercel.json                 # Header di sicurezza
 ```text
 watchParty/{partyId}
   # partyId è il codice d'invito (8 caratteri)
-  partyName, ownerId, ownerEmail, films
-  memberCount, memberIds
+  partyName, ownerId, films
+  finishedCount, memberCount, memberIds
   status: "open" | "closed"
   result: { winner, votes, tied, ... } | null
   createdAt, closedAt
 
 watchParty/{partyId}/members/{uid}
-  uid, email, displayName
+  uid
   isFinished, preferredFilms
   joinedAt, finishedAt
 ```
@@ -262,8 +283,9 @@ watchParty/{partyId}/members/{uid}
 Le operazioni critiche usano **transazioni**:
 - creazione: genera un codice libero e crea stanza + membro proprietario;
 - ingresso nella stanza: verifica codice, stato aperto e duplicati, senza limiti di capienza;
-- invio preferenze: aggiorna solo il documento del membro;
-- chiusura: verifica che tutti abbiano votato e salva il risultato.
+- invio preferenze: segna il proprio documento membro come completato e incrementa `finishedCount` nella stanza, nella stessa transazione;
+- chiusura: verifica che tutti abbiano votato, legge i membri una sola volta e salva il risultato;
+- eliminazione: il solo proprietario rimuove in batch membri e stanza.
 
 ## Test
 

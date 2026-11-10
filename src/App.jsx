@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {onAuthStateChanged} from "firebase/auth";
+import {onAuthStateChanged, signInAnonymously} from "firebase/auth";
 import {auth, isFirebaseConfigured} from "./Firebase.js";
 import {LoginForm} from "./LoginForm.jsx";
 import {RegisterForm} from "./RegisterForm.jsx";
@@ -18,6 +18,7 @@ function App() {
     const [isOnline, setIsOnline] = useState(navigator.onLine);
     const [checkingAuth, setCheckingAuth] = useState(isFirebaseConfigured);
     const [authError, setAuthError] = useState("");
+    const [guestLoading, setGuestLoading] = useState(false);
 
     useEffect(() => {
         const handleOnline = () => setIsOnline(true);
@@ -74,6 +75,19 @@ function App() {
         }
     };
 
+    const handleGuestLogin = async () => {
+        setAuthError("");
+        setGuestLoading(true);
+        try {
+            await signInAnonymously(auth);
+        } catch (error) {
+            console.error(error);
+            setAuthError(t("auth.guestError"));
+        } finally {
+            setGuestLoading(false);
+        }
+    };
+
     return (
         <div className="background-image">
             <div className="form-box">
@@ -103,7 +117,16 @@ function App() {
 
                 <hr/>
 
-                <div className="d-flex justify-content-center">
+                <button
+                    type="button"
+                    className="btn btn-outline-dark w-100"
+                    onClick={handleGuestLogin}
+                    disabled={guestLoading}
+                >
+                    {guestLoading ? t("common.loading") : t("auth.guest")}
+                </button>
+
+                <div className="d-flex justify-content-center mt-3">
                     <button type="button" className="google-sign-in-button" onClick={handleGoogleLogin}>
                         {t("auth.continueGoogle")}
                     </button>
