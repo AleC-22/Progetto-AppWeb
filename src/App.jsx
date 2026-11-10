@@ -9,6 +9,7 @@ import {Fallback} from "./Fallback.jsx";
 import {LoadingScreen} from "./LoadingScreen.jsx";
 import {SetupNotice} from "./SetupNotice.jsx";
 import {LanguageSwitcher} from "./LanguageSwitcher.jsx";
+import {PrivacyNotice} from "./PrivacyNotice.jsx";
 import {useI18n} from "./i18n/context.js";
 
 function App() {
@@ -19,6 +20,8 @@ function App() {
     const [checkingAuth, setCheckingAuth] = useState(isFirebaseConfigured);
     const [authError, setAuthError] = useState("");
     const [guestLoading, setGuestLoading] = useState(false);
+    const [privacyAccepted, setPrivacyAccepted] = useState(false);
+    const [privacyOpen, setPrivacyOpen] = useState(false);
 
     useEffect(() => {
         const handleOnline = () => setIsOnline(true);
@@ -62,6 +65,11 @@ function App() {
 
     const handleGoogleLogin = async () => {
         setAuthError("");
+        if (!privacyAccepted) {
+            setPrivacyOpen(true);
+            setAuthError(t("privacy.required"));
+            return;
+        }
         try {
             const googleUser = await AuthGoogle();
             if (googleUser) {
@@ -98,7 +106,7 @@ function App() {
 
                 {isLogin
                     ? <LoginForm setUser={setUser}/>
-                    : <RegisterForm setUser={setUser}/>}
+                    : <RegisterForm setUser={setUser} privacyAccepted={privacyAccepted}/>}
 
                 <p className="d-flex align-content-center justify-content-center mt-3 mb-2">
                     {isLogin ? t("auth.noAccount") : t("auth.haveAccount")}
@@ -115,6 +123,26 @@ function App() {
                     </a>
                 </p>
 
+                <div className="form-check privacy-consent mt-3">
+                    <input
+                        id="privacy-accept"
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={privacyAccepted}
+                        onChange={(event) => setPrivacyAccepted(event.target.checked)}
+                    />
+                    <label htmlFor="privacy-accept" className="form-check-label">
+                        {t("privacy.accept")}
+                    </label>
+                    <button
+                        type="button"
+                        className="privacy-link privacy-link-inline"
+                        onClick={() => setPrivacyOpen(true)}
+                    >
+                        {t("privacy.link")}
+                    </button>
+                </div>
+
                 <hr/>
 
                 <button
@@ -127,13 +155,20 @@ function App() {
                 </button>
 
                 <div className="d-flex justify-content-center mt-3">
-                    <button type="button" className="google-sign-in-button" onClick={handleGoogleLogin}>
+                    <button
+                        type="button"
+                        className="google-sign-in-button"
+                        onClick={handleGoogleLogin}
+                        disabled={!privacyAccepted}
+                    >
                         {t("auth.continueGoogle")}
                     </button>
                 </div>
 
                 {authError && <p className="form-error mt-3 mb-0">{authError}</p>}
             </div>
+
+            <PrivacyNotice open={privacyOpen} onClose={() => setPrivacyOpen(false)}/>
         </div>
     );
 }

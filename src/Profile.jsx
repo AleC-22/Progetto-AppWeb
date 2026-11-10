@@ -2,12 +2,14 @@ import {deleteUser} from "firebase/auth";
 import {useState} from "react";
 import {LanguageSwitcher} from "./LanguageSwitcher.jsx";
 import {Credits} from "./Credits.jsx";
+import {PrivacyNotice} from "./PrivacyNotice.jsx";
 import {useI18n} from "./i18n/context.js";
 
 export function Profile({user, setUser}) {
     const {t} = useI18n();
     const [error, setError] = useState("");
     const [deleting, setDeleting] = useState(false);
+    const [privacyOpen, setPrivacyOpen] = useState(false);
     const isGuest = Boolean(user?.isAnonymous);
 
     const deleteAccountHandler = async () => {
@@ -48,21 +50,35 @@ export function Profile({user, setUser}) {
                 <label className="form-label mt-4 d-block">{t("profile.language")}</label>
                 <LanguageSwitcher/>
 
-                <label className="form-label mt-4 d-block">{t("profile.deleteAccount")}</label>
                 <button
                     type="button"
-                    className="btn btn-danger delete-button"
-                    onClick={deleteAccountHandler}
-                    disabled={deleting}
+                    className="privacy-link mt-4 d-block"
+                    onClick={() => setPrivacyOpen(true)}
                 >
-                    {deleting ? t("common.loading") : t("profile.deleteAccount")}
+                    {t("privacy.link")}
                 </button>
+
+                {!isGuest && (
+                    <>
+                        <label className="form-label mt-4 d-block">{t("profile.deleteAccount")}</label>
+                        <button
+                            type="button"
+                            className="btn btn-danger delete-button"
+                            onClick={deleteAccountHandler}
+                            disabled={deleting}
+                        >
+                            {deleting ? t("common.loading") : t("profile.deleteAccount")}
+                        </button>
+                    </>
+                )}
             </div>
 
             <section className="profile-credits" aria-labelledby="credits-title">
                 <h3 id="credits-title" className="h6">{t("credits.title")}</h3>
                 <Credits/>
             </section>
+
+            <PrivacyNotice open={privacyOpen} onClose={() => setPrivacyOpen(false)}/>
         </div>
     );
 }

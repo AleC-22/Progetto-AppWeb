@@ -1,4 +1,4 @@
-# 🎬 Movie Matcher
+# 🎬 FlixSort
 
 Applicazione web per **scegliere il film giusto insieme ai tuoi amici**. Crea una stanza, condividi il codice d'invito, scegli genere e anno, vota i film con 👍/👎 e lascia che il match decida per voi.
 
@@ -6,7 +6,7 @@ Interfaccia bilingue **Italiano / English**, installabile come PWA.
 
 ## Funzionalità
 
-- Registrazione e login con email/password o Google (Firebase Auth)
+- Registrazione e login con email/password o Google (Firebase Auth), con informativa privacy e consenso esplicito
 - Accesso come **ospite** senza registrazione (Firebase Anonymous Auth)
 - Creazione di una stanza con nome, genere e anno di uscita
 - Filtro lingua alla creazione: edizione italiana, solo film italiani o tutte le lingue
@@ -17,7 +17,7 @@ Interfaccia bilingue **Italiano / English**, installabile come PWA.
 - Aggiornamenti in tempo reale tramite Firestore (`onSnapshot`)
 - Calcolo del film più votato, gestione dei pareggi e salvataggio del risultato
 - Sezione "Prossime uscite" con paginazione (TMDb)
-- Profilo con lingua ed eliminazione account
+- Profilo con lingua, informativa privacy ed eliminazione account (solo utenti registrati)
 - PWA con icone, manifest e cache offline
 - UI responsive per desktop e mobile
 
@@ -111,6 +111,14 @@ Limiti da conoscere:
 - per un uso duraturo conviene registrarsi.
 
 La modalità ospite non riduce da sola le letture Firestore: Auth e Firestore sono servizi separati e non esiste una collezione utenti.
+
+## Privacy
+
+Prima di usare Google o di registrarsi con email/password bisogna accettare la casella dell'informativa privacy; il pulsante Google e la registrazione restano disabilitati finché non è selezionata. L'informativa completa è consultabile in-app da `src/PrivacyNotice.jsx` e dal Profilo.
+
+L'informativa descrive dati trattati, finalità, conservazione, destinatari (Google Firebase e proxy TMDb) e diritti dell'utente. Il titolare è indicato come progetto personale non commerciale, con contatto tramite le issue del repository GitHub. Il testo è una base tecnica, non una consulenza legale: verificalo prima di un uso pubblico o commerciale.
+
+L'eliminazione dell'account è disponibile solo per gli utenti registrati, perché un ospite non ha dati personali da cancellare: la sua sessione è legata al browser.
 
 ## Codice d'invito, limiti e pulizia
 
@@ -249,6 +257,7 @@ src/
 ├── ConfirmParty.jsx        # Creazione stanza su Firestore
 ├── Decider.jsx             # Voto film, progresso, risultato
 ├── Profile.jsx             # Impostazioni account
+├── PrivacyNotice.jsx       # Informativa privacy bilingue (modale)
 ├── Credits.jsx             # Attribuzione TMDb
 ├── News.jsx                # Prossime uscite TMDb
 ├── Firebase.js             # Init Firebase + emulatori

@@ -4,7 +4,7 @@ import {auth} from "./Firebase.js";
 import {getAuthErrorMessage} from "./authErrors.js";
 import {useI18n} from "./i18n/context.js";
 
-export function RegisterForm({setUser}) {
+export function RegisterForm({setUser, privacyAccepted = false}) {
     const {t} = useI18n();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -26,6 +26,10 @@ export function RegisterForm({setUser}) {
         }
         if (password !== confirmPassword) {
             setError(t("auth.passwordMismatch"));
+            return;
+        }
+        if (!privacyAccepted) {
+            setError(t("privacy.required"));
             return;
         }
 
@@ -88,7 +92,7 @@ export function RegisterForm({setUser}) {
             {error && <p className="form-error">{error}</p>}
 
             <div className="button-box mt-3">
-                <button type="submit" className="btn btn-primary btn-custom px-4" disabled={submitting}>
+                <button type="submit" className="btn btn-primary btn-custom px-4" disabled={submitting || !privacyAccepted}>
                     {submitting ? t("common.loading") : t("auth.register")}
                 </button>
             </div>

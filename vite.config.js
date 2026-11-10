@@ -16,8 +16,8 @@ export default defineConfig(({mode}) => {
                 includeAssets: ["favicon.ico", "poster-placeholder.svg", "icons/*.png"],
                 manifest: {
                     id: "/",
-                    name: "Movie Matcher",
-                    short_name: "MovieMatcher",
+                    name: "FlixSort",
+                    short_name: "FlixSort",
                     description: "Scegli il film giusto insieme ai tuoi amici.",
                     lang: "it",
                     theme_color: "#1b1b2f",
